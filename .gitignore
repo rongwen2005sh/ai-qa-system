@@ -1,0 +1,8 @@
+/.idea/
+/.git/
+
+/api-gateway/target/*
+/qa-service/target/*
+/user-service/target/*
+
+/user-service/application.log

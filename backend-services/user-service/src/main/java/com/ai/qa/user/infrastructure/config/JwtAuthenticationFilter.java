@@ -1,0 +1,82 @@
+package com.ai.qa.user.infrastructure.config;
+
+import com.ai.qa.user.common.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+
+/**
+ * JWT认证过滤器
+ * 继承OncePerRequestFilter确保每次请求只过滤一次
+ * 用于处理JWT令牌的认证流程
+ *
+ * @author Rong Wen
+ * @version 1.0
+ */
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    // JWT工具类，用于生成和解析JWT令牌
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    // 用户详情服务，用于根据用户名加载用户信息
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    /**
+     * 核心过滤方法，处理每个HTTP请求
+     * @param request HTTP请求对象
+     * @param response HTTP响应对象
+     * @param filterChain 过滤器链，用于继续处理请求
+     * @throws ServletException 可能抛出的Servlet异常
+     * @throws IOException 可能抛出的IO异常
+     */
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+        // 从请求头获取token
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String username = null;
+
+        // 解析token（格式：Bearer <token>）
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            try {
+                username = jwtUtil.getUsernameFromToken(token);
+            } catch (Exception e) {
+                // token无效或过期
+                logger.error("Invalid JWT token: {}", e);
+            }
+        }
+
+        // 验证token并设置认证信息
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (jwtUtil.validateToken(token)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
