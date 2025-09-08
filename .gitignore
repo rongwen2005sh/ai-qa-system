@@ -1,8 +1,74 @@
-/.idea/
-/.git/
+#/.idea/
+#/.git/
 
-/api-gateway/target/*
-/qa-service/target/*
-/user-service/target/*
+#/api-gateway/target/*
+#/qa-service/target/*
+#/user-service/target/*
 
-/user-service/application.log
+#/user-service/application.log
+# Maven 编译输出
+**/target/
+**/bin/
+**/build/
+**/out/
+
+# 编译类文件
+**/*.class
+
+# 打包文件
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# 日志文件
+*.log
+logs/
+**/*.log
+
+# IDE 文件
+.idea/
+*.iml
+*.classpath
+*.project
+.settings/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Maven 相关
+**/pom.xml.tag
+**/pom.xml.releaseBackup
+**/pom.xml.versionsBackup
+**/pom.xml.next
+**/release.properties
+dependency-reduced-pom.xml
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# 依赖下载（可选）
+**/lib/
+**/libs/
+
+# 配置文件（根据需要调整）
+# 如果你有本地开发配置，可以忽略但保留示例配置
+**/application-local.yml
+**/application-dev.yml
+**/*.properties.local
+
+# 数据库文件（如果有）
+*.db
+*.sqlite
+*.h2.db
+
+# 临时文件
+**/*.tmp
+**/*.temp
+/tmp/
