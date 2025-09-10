@@ -2,8 +2,10 @@ package com.ai.qa.user.application.service.impl;
 
 import com.ai.qa.user.api.dto.request.LoginRequest;
 import com.ai.qa.user.api.dto.request.RegisterRequest;
+import com.ai.qa.user.api.dto.request.UpdatePasswordRequest;
 import com.ai.qa.user.api.dto.response.LoginResponse;
 import com.ai.qa.user.api.dto.response.RegisterResponse;
+import com.ai.qa.user.api.dto.response.UpdatePasswordResponse;
 import com.ai.qa.user.api.exception.BusinessException;
 import com.ai.qa.user.api.exception.ErrCode;
 import com.ai.qa.user.application.service.UserService;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 用户服务实现类
@@ -27,6 +31,7 @@ import java.util.Optional;
  */
 @Service
 public class UserServiceImpl implements UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -47,6 +52,9 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
+
+        log.info("Start login(), username:{}", loginRequest.getUsername());
+
         // 根据用户名查询用户信息
         Optional<User> userOptional = userRepository.findByUsername(loginRequest.getUsername());
 
@@ -80,6 +88,8 @@ public class UserServiceImpl implements UserService {
         response.setNickname(user.getNickname());
         response.setLoginTime(LocalDateTime.now());
 
+        log.info("End login(), username:{}", loginRequest.getUsername());
+
         return response;
     }
 
@@ -94,6 +104,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public RegisterResponse register(RegisterRequest registerRequest) {
+
+        log.info("Start register(), username:{}", registerRequest.getUsername());
+
         // 检查用户名是否已被注册
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
             throw BusinessException.userAlreadyExists();
@@ -126,6 +139,63 @@ public class UserServiceImpl implements UserService {
         response.setNickname(savedUser.getNickname());
         response.setRegisterTime(LocalDateTime.now());
 
+        log.info("End register(), username:{}", registerRequest.getUsername());
+
+        return response;
+    }
+
+    /**
+     * 修改用户密码处理
+     * 验证旧密码正确性，更新为新密码
+     *
+     * @param updatePasswordRequest 修改密码请求参数
+     * @return UpdatePasswordResponse 修改密码响应结果
+     * @throws BusinessException 当用户不存在、旧密码错误或新密码不匹配时抛出业务异常
+     */
+    @Override
+    @Transactional
+    public UpdatePasswordResponse updatePassword(UpdatePasswordRequest updatePasswordRequest) {
+
+        log.info("Start updatePassword(), username:{}", updatePasswordRequest.getUsername());
+
+        // 根据用户名查询用户信息
+        Optional<User> userOptional = userRepository.findByUsername(updatePasswordRequest.getUsername());
+
+        // 验证用户是否存在
+        if (!userOptional.isPresent()) {
+            throw BusinessException.userNotFound();
+        }
+
+        User user = userOptional.get();
+
+        // 验证旧密码是否正确
+        if (!passwordEncoder.matches(updatePasswordRequest.getOldPassword(), user.getPassword())) {
+            throw BusinessException.passwordIncorrect();
+        }
+
+        // 验证两次输入的新密码是否一致
+        if (!updatePasswordRequest.getNewPassword().equals(updatePasswordRequest.getConfirmNewPassword())) {
+            throw BusinessException.passwordMismatch();
+        }
+
+        // 更新密码（加密存储）
+        user.setPassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
+        user.setUpdateDate(LocalDateTime.now());
+
+        // 保存更新后的用户信息
+        User updatedUser = userRepository.save(user);
+
+        // 构建密码修改成功响应
+        UpdatePasswordResponse response = new UpdatePasswordResponse();
+        response.setSuccess(true);
+        response.setMessage("密码修改成功");
+        response.setErrorCode(ErrCode.SUCCESS);
+        response.setUserId(updatedUser.getId());
+        response.setUsername(updatedUser.getUsername());
+        response.setUpdateTime(LocalDateTime.now());
+
+        log.info("End updatePassword(), username:{}", updatePasswordRequest.getUsername());
+
         return response;
     }
 
@@ -150,6 +220,8 @@ public class UserServiceImpl implements UserService {
     public Boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
+
+
 
     /**
      * 生成用户访问令牌（模拟实现）

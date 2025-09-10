@@ -30,6 +30,7 @@ public final class ErrCode {
     public static final int PASSWORD_INCORRECT = 1003;
     public static final int PASSWORD_MISMATCH = 1004;
     public static final int INVALID_TOKEN = 1005;
+    public static final int PASSWORD_UPDATE_FAILED = 1006;
 
     // 错误消息
     public static final String MSG_SUCCESS = "操作成功";
@@ -41,6 +42,7 @@ public final class ErrCode {
     public static final String MSG_INVALID_TOKEN = "无效的token";
     public static final String MSG_BAD_REQUEST = "请求参数错误";
     public static final String MSG_INTERNAL_ERROR = "服务器内部错误";
+    public static final String MSG_PASSWORD_UPDATE_FAILED = "密码修改失败";
 
     private ErrCode() {
         // 防止实例化

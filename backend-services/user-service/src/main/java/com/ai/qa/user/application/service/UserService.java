@@ -2,8 +2,10 @@ package com.ai.qa.user.application.service;
 
 import com.ai.qa.user.api.dto.request.LoginRequest;
 import com.ai.qa.user.api.dto.request.RegisterRequest;
+import com.ai.qa.user.api.dto.request.UpdatePasswordRequest;
 import com.ai.qa.user.api.dto.response.LoginResponse;
 import com.ai.qa.user.api.dto.response.RegisterResponse;
+import com.ai.qa.user.api.dto.response.UpdatePasswordResponse;
 import com.ai.qa.user.domain.entity.User;
 
 /**
@@ -58,4 +60,13 @@ public interface UserService {
      * @return Boolean true表示用户名已存在，false表示用户名可用
      */
     Boolean existsByUsername(String username);
+
+    /**
+     * 修改用户密码
+     * 验证旧密码后更新为新密码，需要用户已登录并通过JWT认证
+     *
+     * @param updatePasswordRequest 修改密码请求参数，包含用户ID、旧密码和新密码
+     * @return UpdatePasswordResponse 修改密码响应结果
+     */
+    UpdatePasswordResponse updatePassword(UpdatePasswordRequest updatePasswordRequest);
 }

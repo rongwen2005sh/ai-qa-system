@@ -60,19 +60,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 关闭CSRF（前后端分离场景）
                 .csrf(csrf -> csrf.disable())
-                // 不使用Session
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 配置URL权限
                 .authorizeHttpRequests(auth -> auth
-                        // 允许匿名访问的接口（登录、注册、Swagger）
+                        // 允许匿名访问的接口
                         .antMatchers("/api/users/login", "/api/users/register").permitAll()
                         .antMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        // 其他接口需要认证
+                        // 其他接口（包括 /updatePassword）需要认证
                         .anyRequest().authenticated()
                 )
-                // 添加JWT过滤器（在用户名密码过滤器之前）
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

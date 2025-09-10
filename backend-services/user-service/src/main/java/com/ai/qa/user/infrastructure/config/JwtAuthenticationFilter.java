@@ -49,23 +49,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        // 从请求头获取token
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
 
-        // 解析token（格式：Bearer <token>）
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
             try {
                 username = jwtUtil.getUsernameFromToken(token);
             } catch (Exception e) {
-                // token无效或过期
                 logger.error("Invalid JWT token: {}", e);
             }
         }
 
-        // 验证token并设置认证信息
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             if (jwtUtil.validateToken(token)) {
