@@ -64,7 +64,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // 允许匿名访问的接口
-                        .antMatchers("/api/users/login", "/api/users/register").permitAll()
+                        .antMatchers("/api/user/login", "/api/user/register").permitAll()
                         .antMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         // 其他接口（包括 /updatePassword）需要认证
                         .anyRequest().authenticated()
