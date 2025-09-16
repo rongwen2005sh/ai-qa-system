@@ -1,13 +1,13 @@
-package com.ai.qa.service.application.dto;
+package com.ai.qa.service.api.dto;
 
 import lombok.Data;
 
 /**
- * 保存历史记录命令DTO
+ * 保存历史记录请求DTO
  * 用于接收前端保存问答历史的请求参数
  */
 @Data
-public class SaveHistoryCommand {
+public class SaveHistoryRequest {
 
     /**
      * 用户ID

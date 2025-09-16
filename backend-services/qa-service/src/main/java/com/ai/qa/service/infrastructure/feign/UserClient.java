@@ -5,27 +5,40 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 /**
- * 调用 user-service 的 Feign 客户端
+ * 用户服务Feign客户端接口
+ * 用于调用user-service微服务的REST API
+ *
+ * @FeignClient 注解说明：
+ * - name: 指定要调用的服务在注册中心的服务名称
+ * - fallback: 指定服务降级处理类，当服务不可用时执行降级逻辑
  */
-// name/value 属性值必须与目标服务在 Nacos 上注册的服务名完全一致！
-@FeignClient(name = "user-service")
+@FeignClient(name = "user-service", fallback = UserClientFallback.class)
 public interface UserClient {
 
     /**
-     * 根据用户ID获取用户信息
+     * 根据用户ID获取用户完整信息
      *
      * @param userId 用户ID
-     * @return 用户信息String
-     *
-     * 注意：
-     * 1. @GetMapping 里的路径必须与 user-service 中 Controller 方法的完整路径匹配。
-     * 2. 方法签名 (方法名、参数) 可以自定义，但 @PathVariable, @RequestParam 等注解必须和远程接口保持一致。
+     * @return 用户信息的JSON字符串
      */
-    @GetMapping("/api/user/{userId}") // <-- 这个路径要和 user-service 的接口完全匹配
+    @GetMapping("/api/user/{userId}")
     String getUserById(@PathVariable("userId") Long userId);
 
-    // 你可以在这里定义 user-service 暴露的其他任何接口
-    // 例如:
-    // @PostMapping("/api/user/internal/check-status")
-    // StatusDTO checkUserStatus(@RequestBody CheckRequest request);
+    /**
+     * 获取用户状态信息
+     *
+     * @param userId 用户ID
+     * @return 用户状态信息的JSON字符串
+     */
+    @GetMapping("/api/user/{userId}/status")
+    String getUserStatus(@PathVariable("userId") Long userId);
+
+    /**
+     * 获取用户基本信息
+     *
+     * @param userId 用户ID
+     * @return 用户基本信息的JSON字符串
+     */
+    @GetMapping("/api/user/{userId}/basic-info")
+    String getUserBasicInfo(@PathVariable("userId") Long userId);
 }

@@ -2,12 +2,42 @@ server:
   port: 8082
 spring:
   application:
-    name: qa-service
+    name: qa-service-rw
   cloud:
     nacos:
       server-addr: 54.219.180.170:8848
+  datasource:
+    url: jdbc:mysql://54.219.180.170:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: ai_qa_system
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    show-sql: true
+#logging:
+#  level:
+#    # 将你的FeignClient接口所在的包路径设置为DEBUG
+#    # 假设 UserClient 在 com.ai.qa.qaservice.feign 包下
+#    com.ai.qa.qaservice.feign: DEBUG
+
+# Swagger 配置 (正确的位置，与 spring 平级)
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# 日志配置
 logging:
+  file:
+    name: application.log
+    path: logs
   level:
-    # 将你的FeignClient接口所在的包路径设置为DEBUG
-    # 假设 UserClient 在 com.ai.qa.qaservice.feign 包下
-    com.ai.qa.qaservice.feign: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  charset:
+    console: UTF-8
+    file: UTF-8
