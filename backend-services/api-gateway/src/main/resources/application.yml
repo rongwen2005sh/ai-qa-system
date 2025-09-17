@@ -9,7 +9,7 @@ logging:
     com.alibaba.nacos.client: DEBUG
 spring:
   application:
-    name: api-gateway
+    name: api-gateway-rw
   config:
     import:
       # 引入共享配置
@@ -28,14 +28,14 @@ spring:
           lower-case-service-id: true # 将服务名转为小写路径，e.g., user-service -> /user-service/**
       routes:
         - id: user_service_route
-          uri: lb://user-service # lb:// 表示从Nacos负载均衡地选择一个user-service实例
+          uri: lb://user-service-rw # lb:// 表示从Nacos负载均衡地选择一个user-service实例
 #          uri: http://192.168.31.186:8081
           predicates:
             - Path=/api/user/** # 匹配所有/api/user/开头的请求
           filters:
             - StripPrefix=2
         - id: qa_service_route
-          uri: lb://qa-service
+          uri: lb://qa-service-rw
           predicates:
             - Path=/api/qa/**
       default-filters:
@@ -43,3 +43,9 @@ spring:
         - name: RequestRateLimiter
           args:
             key-resolver: '#{@ipKeyResolver}'
+
+# Swagger 配置 (正确的位置，与 spring 平级)
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
