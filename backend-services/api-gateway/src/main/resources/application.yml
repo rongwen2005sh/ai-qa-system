@@ -33,16 +33,25 @@ spring:
           predicates:
             - Path=/api/user/** # 匹配所有/api/user/开头的请求
           filters:
-            - StripPrefix=2
+#            - StripPrefix=2
+            - StripPrefix=0
         - id: qa_service_route
           uri: lb://qa-service-rw
           predicates:
             - Path=/api/qa/**
-      default-filters:
-        # 配置默认的限流过滤器
-        - name: RequestRateLimiter
-          args:
-            key-resolver: '#{@ipKeyResolver}'
+#      default-filters:
+#        # 配置默认的限流过滤器
+#        - name: RequestRateLimiter
+#          args:
+#            key-resolver: '#{@ipKeyResolver}'
+          default-filters:
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: '#{@inMemoryRateLimiter}'
+                key-resolver: '#{@ipKeyResolver}'
+                replenish-rate: 10000
+                burst-capacity: 100000
+                requested-tokens: 1
 
 # Swagger 配置 (正确的位置，与 spring 平级)
 springdoc:
