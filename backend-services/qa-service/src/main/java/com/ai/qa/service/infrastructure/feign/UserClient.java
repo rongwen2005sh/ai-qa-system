@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
  * - name: 指定要调用的服务在注册中心的服务名称
  * - fallback: 指定服务降级处理类，当服务不可用时执行降级逻辑
  */
-@FeignClient(name = "user-service", fallback = UserClientFallback.class)
+@FeignClient(name = "user-service-rw", fallback = UserClientFallback.class)
 public interface UserClient {
 
     /**

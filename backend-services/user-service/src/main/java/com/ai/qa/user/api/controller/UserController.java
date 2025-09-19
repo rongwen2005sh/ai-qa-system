@@ -6,6 +6,7 @@ import com.ai.qa.user.api.dto.request.UpdatePasswordRequest;
 import com.ai.qa.user.api.dto.response.LoginResponse;
 import com.ai.qa.user.api.dto.response.RegisterResponse;
 import com.ai.qa.user.api.dto.response.UpdatePasswordResponse;
+import com.ai.qa.user.api.dto.response.UserResponse;
 import com.ai.qa.user.application.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,10 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,6 +108,64 @@ public class UserController {
         // 注册成功返回201 Created状态码
         // 失败时业务异常已在服务层抛出，不会执行到此处
         return ResponseEntity.status(201).body(response);
+    }
+
+    /**
+     * 根据用户ID查询用户信息
+     * 获取指定用户ID的完整用户信息
+     *
+     * @param id 用户ID
+     * @return ResponseEntity<UserResponse> 包含用户信息的响应实体
+     * @apiNote GET /api/user/{id}
+     * @example GET /api/user/1
+     */
+    @Operation(summary = "根据ID查询用户", description = "通过用户ID获取用户详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long id
+    ) {
+        log.info("Start getUserById(), id:{}", id);
+
+        // 调用用户服务查询用户信息
+        UserResponse response = userService.getUserById(id);
+
+        log.info("End getUserById(), id:{}, username:{}", id, response.getUsername());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 根据用户名查询用户信息
+     * 获取指定用户名的完整用户信息
+     *
+     * @param username 用户名
+     * @return ResponseEntity<UserResponse> 包含用户信息的响应实体
+     * @apiNote GET /api/user/username/{username}
+     * @example GET /api/user/username/testuser
+     */
+    @Operation(summary = "根据用户名查询用户", description = "通过用户名获取用户详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
+    @GetMapping("/username/{username}")
+    public ResponseEntity<UserResponse> getUserByUsername(
+            @Parameter(description = "用户名", required = true, example = "testuser")
+            @PathVariable String username
+    ) {
+        log.info("Start getUserByUsername(), username:{}", username);
+
+        // 调用用户服务查询用户信息
+        UserResponse response = userService.findByUsername(username);
+
+        log.info("End getUserByUsername(), username:{}, userId:{}", username, response.getUserId());
+
+        return ResponseEntity.ok(response);
     }
 
     /**

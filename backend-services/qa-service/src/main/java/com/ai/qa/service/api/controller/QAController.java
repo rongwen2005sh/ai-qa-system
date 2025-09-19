@@ -178,6 +178,7 @@ public class QAController {
     @GetMapping("/test")
     public String testFeign() {
         System.out.println("测试feign");
-        return qaService.processQuestion(1L, "测试问题", "test-session");
+//        return qaService.processQuestion(1L, "测试问题", "test-session");
+        return "OK";
     }
 }

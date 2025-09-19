@@ -7,6 +7,8 @@ spring:
     nacos:
       discovery:
         server-addr: 54.219.180.170:8848
+        ip: 54.115.103.18 # 改为user-service所在服务器的公网IP
+        port: 8081
   datasource:
     url: jdbc:mysql://54.219.180.170:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root

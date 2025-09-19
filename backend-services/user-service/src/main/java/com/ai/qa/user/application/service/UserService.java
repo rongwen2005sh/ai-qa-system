@@ -6,7 +6,10 @@ import com.ai.qa.user.api.dto.request.UpdatePasswordRequest;
 import com.ai.qa.user.api.dto.response.LoginResponse;
 import com.ai.qa.user.api.dto.response.RegisterResponse;
 import com.ai.qa.user.api.dto.response.UpdatePasswordResponse;
-import com.ai.qa.user.domain.entity.User;
+import com.ai.qa.user.api.dto.response.UserResponse;
+
+
+import java.util.Optional;
 
 /**
  * 用户服务接口
@@ -43,14 +46,26 @@ public interface UserService {
     RegisterResponse register(RegisterRequest registerRequest);
 
     /**
+     * 根据用户ID查询用户信息
+     * 用于获取指定用户ID的完整用户信息
+     *
+     * @param id 用户ID
+     * @return UserResponse 用户响应对象，包含用户信息和操作结果
+     * @throws com.ai.qa.user.api.exception.BusinessException 当用户不存在时抛出业务异常
+     * @see UserResponse
+     */
+    UserResponse getUserById(Long id);
+
+    /**
      * 根据用户名查询用户信息
      * 用于获取指定用户名的完整用户信息
      *
      * @param username 用户名
-     * @return User 用户实体对象，如果用户不存在则返回null
-     * @see User
+     * @return UserResponse 用户响应对象，包含用户信息和操作结果
+     * @throws com.ai.qa.user.api.exception.BusinessException 当用户不存在时抛出业务异常
+     * @see UserResponse
      */
-    User findByUsername(String username);
+    UserResponse findByUsername(String username);
 
     /**
      * 检查用户名是否存在

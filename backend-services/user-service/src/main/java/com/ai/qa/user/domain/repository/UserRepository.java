@@ -20,6 +20,16 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
+     * 根据用户ID查询用户信息
+     * 使用自定义查询语句，可以更灵活地控制查询
+     *
+     * @param id 用户ID
+     * @return Optional<User> 用户信息的Optional包装
+     */
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> getUserById(@Param("id") Long id);
+
+    /**
      * 根据用户名查询用户信息
      * 使用Spring Data JPA的查询方法命名约定自动生成查询
      *

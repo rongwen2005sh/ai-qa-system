@@ -6,6 +6,7 @@ import com.ai.qa.user.api.dto.request.UpdatePasswordRequest;
 import com.ai.qa.user.api.dto.response.LoginResponse;
 import com.ai.qa.user.api.dto.response.RegisterResponse;
 import com.ai.qa.user.api.dto.response.UpdatePasswordResponse;
+import com.ai.qa.user.api.dto.response.UserResponse;
 import com.ai.qa.user.api.exception.BusinessException;
 import com.ai.qa.user.api.exception.ErrCode;
 import com.ai.qa.user.application.service.UserService;
@@ -200,14 +201,49 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 根据用户名查询用户信息
+     * 根据用户ID查询用户信息
+     * 用于获取指定用户ID的完整用户信息
      *
-     * @param username 用户名
-     * @return User 用户实体对象，如果不存在则返回null
+     * @param id 用户ID
+     * @return UserResponse 用户响应对象，包含用户信息和操作结果
+     * @throws BusinessException 当用户不存在时抛出业务异常
      */
     @Override
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElse(null);
+    public UserResponse getUserById(Long id) {
+        log.info("Querying user by ID: {}", id);
+
+        Optional<User> userOptional = userRepository.getUserById(id);
+
+        if (!userOptional.isPresent()) {
+            log.warn("User not found, id:{}", id);
+            throw BusinessException.userNotFound();
+        }
+
+        User user = userOptional.get();
+        return convertToUserResponse(user);
+    }
+
+    /**
+     * 根据用户名查询用户信息
+     * 用于获取指定用户名的完整用户信息
+     *
+     * @param username 用户名
+     * @return UserResponse 用户响应对象，包含用户信息和操作结果
+     * @throws BusinessException 当用户不存在时抛出业务异常
+     */
+    @Override
+    public UserResponse findByUsername(String username) {
+        log.info("Querying user by username: {}", username);
+
+        Optional<User> userOptional = userRepository.findByUsername(username);
+
+        if (!userOptional.isPresent()) {
+            log.warn("User not found, username:{}", username);
+            throw BusinessException.userNotFound();
+        }
+
+        User user = userOptional.get();
+        return convertToUserResponse(user);
     }
 
     /**
@@ -221,7 +257,23 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsByUsername(username);
     }
 
-
+    /**
+     * 将User实体转换为UserResponse DTO
+     *
+     * @param user User实体对象
+     * @return UserResponse 响应DTO对象
+     */
+    private UserResponse convertToUserResponse(User user) {
+        UserResponse response = new UserResponse();
+        response.setSuccess(true);
+        response.setMessage(ErrCode.MSG_SUCCESS);
+        response.setErrorCode(ErrCode.SUCCESS);
+        response.setUserId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setNickname(user.getNickname());
+        response.setRegisterTime(user.getCreateDate());
+        return response;
+    }
 
     /**
      * 生成用户访问令牌（模拟实现）
