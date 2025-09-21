@@ -1,12 +1,36 @@
-#/.idea/
-#/.git/
+# ==================== 通用规则 ====================
+# 系统文件
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-#/api-gateway/target/*
-#/qa-service/target/*
-#/user-service/target/*
+# 临时文件
+**/*.tmp
+**/*.temp
+/tmp/
 
-#/user-service/application.log
-# Maven 编译输出
+# 日志文件
+*.log
+logs/
+**/*.log
+# 带时间戳的日志文件（如 application.log.2025-09-19.0.gz）
+**/application.log.*
+**/*.log.*
+*.log.*.gz
+*.log.*.zip
+
+# IDE 文件
+.idea/
+*.iml
+*.classpath
+*.project
+.settings/
+.vscode/
+*.swp
+*.swo
+
+# ==================== 后端规则 ====================
+# Java 编译输出
 **/target/
 **/bin/
 **/build/
@@ -22,26 +46,6 @@
 *.zip
 *.tar.gz
 
-# 日志文件
-*.log
-logs/
-**/*.log
-
-# IDE 文件
-.idea/
-*.iml
-*.classpath
-*.project
-.settings/
-.vscode/
-*.swp
-*.swo
-
-# 系统文件
-.DS_Store
-Thumbs.db
-Desktop.ini
-
 # Maven 相关
 **/pom.xml.tag
 **/pom.xml.releaseBackup
@@ -53,22 +57,74 @@ dependency-reduced-pom.xml
 # Maven wrapper
 .mvn/wrapper/maven-wrapper.jar
 
-# 依赖下载（可选）
+# 依赖下载
 **/lib/
 **/libs/
 
-# 配置文件（根据需要调整）
-# 如果你有本地开发配置，可以忽略但保留示例配置
+# 配置文件（本地开发配置）
 **/application-local.yml
 **/application-dev.yml
 **/*.properties.local
 
-# 数据库文件（如果有）
+# 数据库文件
 *.db
 *.sqlite
 *.h2.db
 
-# 临时文件
-**/*.tmp
-**/*.temp
-/tmp/
+# ==================== 前端规则 ====================
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# ==================== 项目特定路径 ====================
+# 后端服务特定路径
+/api-gateway/target/
+/api-gateway/application.log
+/api-gateway/application.log.*  # 带时间戳的日志文件
+/qa-service/target/
+/qa-service/application.log
+/qa-service/application.log.*  # 带时间戳的日志文件
+/user-service/target/
+/user-service/application.log
+/user-service/application.log.*  # 带时间戳的日志文件
+
+# 前端特定路径
+/frontend-nextjs/frontend/.next/
+/frontend-nextjs/frontend/out/
+/frontend-nextjs/frontend/build/
+/frontend-nextjs/frontend/node_modules/
