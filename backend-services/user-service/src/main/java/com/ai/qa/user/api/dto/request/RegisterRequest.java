@@ -32,6 +32,16 @@ public class RegisterRequest {
     private String nickname;
 
     /**
+     * 用户邮箱
+     * 用户的电子邮箱地址，用于接收通知和重置密码
+     * 要求符合邮箱格式规范，通常需要唯一性约束
+     * 可用于替代用户名进行登录
+     *
+     * @apiNote 示例值: "user@example.com", "admin@company.com"
+     */
+    private String email;
+
+    /**
      * 密码
      * 用户的登录密码，需要进行加密存储
      * 必填字段，建议长度至少6个字符

@@ -26,11 +26,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Autowired
-    private JwtAuthenticationFilter  jwtAuthFilter;
+    private JwtAuthenticationFilter jwtAuthFilter;
 
     /**
      * 配置密码编码器Bean
      * 使用BCrypt强哈希算法进行密码加密和验证
+     * 
      * @return BCryptPasswordEncoder实例
      */
     @Bean
@@ -41,6 +42,7 @@ public class SecurityConfig {
     /**
      * 配置认证管理器Bean
      * 用于处理用户认证请求
+     * 
      * @param config 认证配置对象，由Spring自动注入
      * @return AuthenticationManager实例
      * @throws Exception 可能抛出的异常
@@ -53,44 +55,49 @@ public class SecurityConfig {
     /**
      * 配置安全过滤器链
      * 定义HTTP请求的安全策略和过滤规则
+     * 
      * @param http HttpSecurity对象，用于构建安全配置
      * @return SecurityFilterChain实例
      * @throws Exception 可能抛出的异常
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        // 允许匿名访问的接口
-//                        .antMatchers("/api/user/login", "/api/user/register").permitAll()
-//                        .antMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-//                        // 其他接口（包括 /updatePassword）需要认证
-//                        .anyRequest().authenticated()
-//                )
-//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        // http
+        // .csrf(csrf -> csrf.disable())
+        // .sessionManagement(session ->
+        // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        // .authorizeHttpRequests(auth -> auth
+        // // 允许匿名访问的接口
+        // .antMatchers("/api/user/login", "/api/user/register").permitAll()
+        // .antMatchers("/swagger-ui.html", "/v3/api-docs/**",
+        // "/swagger-ui/**").permitAll()
+        // // 其他接口（包括 /updatePassword）需要认证
+        // .anyRequest().authenticated()
+        // )
+        // .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        // 允许匿名访问的接口（方法+路径同步）
-//                        .antMatchers(HttpMethod.POST, "/api/user/login").permitAll()
-//                        .antMatchers(HttpMethod.POST, "/api/user/register").permitAll()
-//                        .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-//                        .antMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-//                        .anyRequest().authenticated()
-//                )
+                // .authorizeHttpRequests(auth -> auth
+                // // 允许匿名访问的接口（方法+路径同步）
+                // .antMatchers(HttpMethod.POST, "/api/user/login").permitAll()
+                // .antMatchers(HttpMethod.POST, "/api/user/register").permitAll()
+                // .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // .antMatchers("/swagger-ui.html", "/v3/api-docs/**",
+                // "/swagger-ui/**").permitAll()
+                // .anyRequest().authenticated()
+                // )
                 .authorizeHttpRequests(auth -> auth
+
                         .antMatchers(HttpMethod.POST, "/api/user/login").permitAll()
                         .antMatchers(HttpMethod.POST, "/api/user/register").permitAll()
                         .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .antMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .antMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .antMatchers("/actuator/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
 
         return http.build();
     }

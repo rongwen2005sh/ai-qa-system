@@ -47,6 +47,16 @@ public class User {
     private String nickname;
 
     /**
+     * 用户邮箱
+     * 用户的电子邮箱地址，用于接收通知和重置密码
+     * 要求符合邮箱格式规范，通常需要唯一性约束
+     * 可用于替代用户名进行登录
+     *
+     * @apiNote 示例值: "user@example.com", "admin@company.com"
+     */
+    private String email;
+
+    /**
      * 用户密码
      * 存储加密后的密码哈希值，不应存储明文密码
      * 使用强加密算法（如BCrypt）进行加密

@@ -87,6 +87,7 @@ public class UserServiceImpl implements UserService {
         response.setUserId(user.getId());
         response.setUsername(user.getUsername());
         response.setNickname(user.getNickname());
+        response.setEmail(user.getEmail());
         response.setLoginTime(LocalDateTime.now());
 
         log.info("End login(), username:{}", loginRequest.getUsername());
@@ -122,6 +123,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setNickname(registerRequest.getNickname());
+        user.setEmail(registerRequest.getEmail());
         // 对密码进行加密存储
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setCreateDate(LocalDateTime.now());
@@ -138,6 +140,7 @@ public class UserServiceImpl implements UserService {
         response.setUserId(savedUser.getId());
         response.setUsername(savedUser.getUsername());
         response.setNickname(savedUser.getNickname());
+        response.setEmail(user.getEmail());
         response.setRegisterTime(LocalDateTime.now());
 
         log.info("End register(), username:{}", registerRequest.getUsername());
@@ -307,6 +310,5 @@ public class UserServiceImpl implements UserService {
     private String encodePassword(String rawPassword) {
         return passwordEncoder.encode(rawPassword);
     }
-
 
 }

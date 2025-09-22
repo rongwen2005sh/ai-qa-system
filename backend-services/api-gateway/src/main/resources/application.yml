@@ -1,6 +1,9 @@
 server:
   port: 8080 # 所有后端请求的入口
 logging:
+  file:
+    path: ./logs # 添加当前目录前缀
+    name: application.log
   level:
     # 将 Gateway 的核心日志级别设置为 DEBUG
     org.springframework.cloud.gateway: DEBUG
@@ -13,7 +16,7 @@ spring:
   config:
     import:
       # 引入共享配置
-      - "nacos:shared-config.yml"
+      - "nacos:shared-config-rw.yml"
   cloud:
     nacos:
       server-addr: 54.219.180.170:8848
@@ -22,34 +25,52 @@ spring:
         file-extension: yml
         group: DEFAULT_GROUP
     gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowed-origins: "http://localhost:3000"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowed-headers: "*"
+            allow-credentials: true
+            exposed-headers:
+              - Authorization
+              - Content-Type
+            max-age: 3600
       discovery:
         locator:
           enabled: false # 开启基于服务发现的路由功能
           lower-case-service-id: true # 将服务名转为小写路径，e.g., user-service -> /user-service/**
       routes:
         - id: user_service_route
-          uri: lb://user-service-rw # lb:// 表示从Nacos负载均衡地选择一个user-service实例
-#          uri: http://192.168.31.186:8081
+          #uri: lb://user-service-rw # lb:// 表示从Nacos负载均衡地选择一个user-service实例
+          uri: http://localhost:8081
           predicates:
             - Path=/api/user/** # 匹配所有/api/user/开头的请求
-          filters:
-#            - StripPrefix=2
-            - StripPrefix=0
-            #- AddRequestHeader=Authorization, Bearer your-token-here # 添加认证头
+          # filters:
+          # - StripPrefix=2
+          # - StripPrefix=0
+          #- AddRequestHeader=Authorization, Bearer your-token-here # 添加认证头
         - id: qa_service_route
-          uri: lb://qa-service-rw
+          # uri: lb://qa-service-rw
+          uri: http://localhost:8081
           predicates:
             - Path=/api/qa/**
-#      default-filters:
-#        # 配置默认的限流过滤器
-#        - name: RequestRateLimiter
-#          args:
-#            key-resolver: '#{@ipKeyResolver}'
+          #      default-filters:
+          #        # 配置默认的限流过滤器
+          #        - name: RequestRateLimiter
+          #          args:
+          #            key-resolver: '#{@ipKeyResolver}'
           default-filters:
             - name: RequestRateLimiter
               args:
-                rate-limiter: '#{@inMemoryRateLimiter}'
-                key-resolver: '#{@ipKeyResolver}'
+                rate-limiter: "#{@inMemoryRateLimiter}"
+                key-resolver: "#{@ipKeyResolver}"
                 replenish-rate: 10000
                 burst-capacity: 100000
                 requested-tokens: 1
@@ -59,3 +80,13 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+
+# 启用网关的actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true

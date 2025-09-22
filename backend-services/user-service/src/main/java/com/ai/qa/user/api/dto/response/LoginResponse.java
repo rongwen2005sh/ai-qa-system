@@ -49,6 +49,16 @@ public class LoginResponse extends BaseResponse {
     private String nickname;
 
     /**
+     * 用户邮箱
+     * 用户的电子邮箱地址，用于接收通知和重置密码
+     * 要求符合邮箱格式规范，通常需要唯一性约束
+     * 可用于替代用户名进行登录
+     *
+     * @apiNote 示例值: "user@example.com", "admin@company.com"
+     */
+    private String email;
+
+    /**
      * 登录时间
      * 用户本次登录的成功时间
      * 使用ISO-8601格式的时间戳
