@@ -22,6 +22,15 @@ public class UserClientFallback implements UserClient {
     }
 
     /**
+     * 获取用户信息的降级处理
+     */
+    @Override
+    public String getUserByUsername(String username) {
+        log.warn("UserService unavailable, fallback triggered for username: {}", username);
+        return "{\"error\": \"用户服务暂时不可用\", \"userId\": " + username + "}";
+    }
+
+    /**
      * 获取用户状态的降级处理
      */
     @Override

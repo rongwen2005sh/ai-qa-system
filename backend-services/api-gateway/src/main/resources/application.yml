@@ -48,8 +48,8 @@ spring:
           lower-case-service-id: true # 将服务名转为小写路径，e.g., user-service -> /user-service/**
       routes:
         - id: user_service_route
-          #uri: lb://user-service-rw # lb:// 表示从Nacos负载均衡地选择一个user-service实例
-          uri: http://localhost:8081
+          uri: lb://user-service-rw # lb:// 表示从Nacos负载均衡地选择一个user-service实例
+          #uri: http://localhost:8081
           predicates:
             - Path=/api/user/** # 匹配所有/api/user/开头的请求
           # filters:
@@ -57,8 +57,8 @@ spring:
           # - StripPrefix=0
           #- AddRequestHeader=Authorization, Bearer your-token-here # 添加认证头
         - id: qa_service_route
-          # uri: lb://qa-service-rw
-          uri: http://localhost:8081
+          uri: lb://qa-service-rw
+          #uri: http://localhost:8082
           predicates:
             - Path=/api/qa/**
           #      default-filters:

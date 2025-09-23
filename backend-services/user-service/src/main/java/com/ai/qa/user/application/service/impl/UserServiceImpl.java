@@ -290,25 +290,26 @@ public class UserServiceImpl implements UserService {
         return jwtUtil.generateToken(user.getUsername());
     }
 
-    /**
-     * 验证用户密码是否正确
-     *
-     * @param rawPassword     原始密码（用户输入）
-     * @param encodedPassword 加密后的密码（数据库存储）
-     * @return Boolean true表示密码正确，false表示密码错误
-     */
-    private Boolean validatePassword(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
-    }
+    // /**
+    // * 验证用户密码是否正确
+    // *
+    // * @param rawPassword 原始密码（用户输入）
+    // * @param encodedPassword 加密后的密码（数据库存储）
+    // * @return Boolean true表示密码正确，false表示密码错误
+    // */
+    // private Boolean validatePassword(String rawPassword, String encodedPassword)
+    // {
+    // return passwordEncoder.matches(rawPassword, encodedPassword);
+    // }
 
-    /**
-     * 加密用户密码
-     *
-     * @param rawPassword 原始密码
-     * @return String 加密后的密码
-     */
-    private String encodePassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
-    }
+    // /**
+    // * 加密用户密码
+    // *
+    // * @param rawPassword 原始密码
+    // * @return String 加密后的密码
+    // */
+    // private String encodePassword(String rawPassword) {
+    // return passwordEncoder.encode(rawPassword);
+    // }
 
 }

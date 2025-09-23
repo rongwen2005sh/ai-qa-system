@@ -1,5 +1,6 @@
 package com.ai.qa.service.api.controller;
 
+import com.ai.qa.service.api.dto.AskQaRequest;
 import com.ai.qa.service.api.dto.QAHistoryDTO;
 import com.ai.qa.service.api.dto.SaveHistoryRequest;
 import com.ai.qa.service.application.dto.QAHistoryQuery; // 确保这个导入正确
@@ -27,18 +28,17 @@ public class QAController {
     /**
      * 处理用户问题
      *
-     * @param userId 用户ID
-     * @param question 用户问题
+     * @param userId    用户ID
+     * @param question  用户问题
      * @param sessionId 会话ID（可选）
      * @return AI生成的回答
      */
     @PostMapping("/ask")
     public ResponseEntity<String> askQuestion(
-            @RequestParam Long userId,
-            @RequestParam String question,
-            @RequestParam(required = false) String sessionId) {
+            @RequestBody AskQaRequest request) {
         try {
-            String answer = qaService.processQuestion(userId, question, sessionId);
+            String answer = qaService.processQuestion(request.getUserId(), request.getQuestion(),
+                    request.getSessionId());
             return ResponseEntity.ok(answer);
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
@@ -61,7 +61,6 @@ public class QAController {
         command.setAnswer(request.getAnswer());
         command.setSessionId(request.getSessionId());
         command.setRagContext(request.getRagContext());
-
 
         QAHistoryDTO dto = qaHistoryService.saveHistory(command);
         return ResponseEntity.ok(dto);
@@ -86,10 +85,10 @@ public class QAController {
     /**
      * 查询用户问答历史
      *
-     * @param userId 用户ID
+     * @param userId    用户ID
      * @param sessionId 会话ID（可选）
-     * @param page 页码（可选，默认1）
-     * @param size 每页大小（可选，默认10）
+     * @param page      页码（可选，默认1）
+     * @param size      每页大小（可选，默认10）
      * @return 问答历史列表
      */
     @GetMapping("/history/user/{userId}")
@@ -178,7 +177,7 @@ public class QAController {
     @GetMapping("/test")
     public String testFeign() {
         System.out.println("测试feign");
-//        return qaService.processQuestion(1L, "测试问题", "test-session");
+        // return qaService.processQuestion(1L, "测试问题", "test-session");
         return "OK";
     }
 }

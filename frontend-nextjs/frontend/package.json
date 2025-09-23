@@ -50,7 +50,8 @@
     "react-dom": "19.1.0",
     "react-markdown": "10.1.0",
     "react-syntax-highlighter": "15.6.6",
-    "tailwind-merge": "^1.14.0"
+    "tailwind-merge": "^1.14.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

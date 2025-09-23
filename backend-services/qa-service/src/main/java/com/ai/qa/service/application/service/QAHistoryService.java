@@ -5,7 +5,6 @@ import com.ai.qa.service.application.dto.QAHistoryQuery;
 import com.ai.qa.service.application.dto.SaveHistoryCommand;
 import com.ai.qa.service.domain.exception.QADomainException;
 import com.ai.qa.service.domain.model.QAHistory;
-import com.ai.qa.service.domain.model.QARAG;
 import com.ai.qa.service.domain.repo.QAHistoryRepo;
 import com.ai.qa.service.domain.service.QAService;
 import lombok.RequiredArgsConstructor;
@@ -54,17 +53,12 @@ public class QAHistoryService {
         // 参数验证：确保必要字段不为空
         validateSaveCommand(command);
 
-        // 创建RAG上下文（如果有的话）：将字符串上下文转换为领域对象
-        QARAG rag = createRagContext(command.getRagContext());
-
         // 使用工厂方法创建领域对象：保持领域模型的完整性
         QAHistory history = QAHistory.createNew(
                 command.getUserId(),
                 command.getQuestion(),
                 command.getAnswer(),
-                command.getSessionId(),
-                rag
-        );
+                command.getSessionId());
 
         // 调用仓库保存数据：基础设施层负责具体持久化实现
         QAHistory savedHistory = qaHistoryRepo.save(history);
@@ -232,20 +226,6 @@ public class QAHistoryService {
     }
 
     /**
-     * 创建RAG上下文
-     * 将字符串形式的RAG上下文转换为领域对象
-     *
-     * @param ragContext RAG上下文字符串
-     * @return QARAG领域对象，如果输入为空则返回null
-     */
-    private QARAG createRagContext(String ragContext) {
-        if (ragContext != null && !ragContext.trim().isEmpty()) {
-            return QARAG.createSimple(ragContext);
-        }
-        return null;
-    }
-
-    /**
      * 创建分页请求
      * 根据查询参数构建Spring Data的分页请求对象
      *
@@ -255,9 +235,8 @@ public class QAHistoryService {
     private PageRequest createPageRequest(QAHistoryQuery query) {
         return PageRequest.of(
                 Math.max(query.getPage() - 1, 0), // 确保页码不小于0（前端页码从1开始，后端从0开始）
-                Math.max(query.getSize(), 1),     // 确保每页大小不小于1
-                query.getDesc() ? Sort.by(Sort.Direction.DESC, "timestamp") : Sort.by(Sort.Direction.ASC, "timestamp")
-        );
+                Math.max(query.getSize(), 1), // 确保每页大小不小于1
+                query.getDesc() ? Sort.by(Sort.Direction.DESC, "timestamp") : Sort.by(Sort.Direction.ASC, "timestamp"));
     }
 
     /**

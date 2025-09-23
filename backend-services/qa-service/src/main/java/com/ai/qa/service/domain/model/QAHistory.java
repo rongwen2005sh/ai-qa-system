@@ -54,11 +54,6 @@ public class QAHistory {
     private LocalDateTime updateTime;
 
     /**
-     * RAG上下文信息
-     */
-    private QARAG rag;
-
-    /**
      * 私有构造函数，确保通过工厂方法创建对象
      * 保持领域模型的完整性和一致性
      */
@@ -68,39 +63,24 @@ public class QAHistory {
         this.updateTime = LocalDateTime.now();
     }
 
-
     /**
      * 创建新的QA历史记录（工厂方法）
      *
-     * @param userId 用户ID
-     * @param question 用户问题
-     * @param answer AI回答
+     * @param userId    用户ID
+     * @param question  用户问题
+     * @param answer    AI回答
      * @param sessionId 会话ID
-     * @param rag RAG上下文
+     * @param rag       RAG上下文
      * @return 新创建的QAHistory实例
      */
     public static QAHistory createNew(String userId, String question, String answer,
-                                      String sessionId, QARAG rag) {
+            String sessionId) {
         QAHistory history = new QAHistory();
         history.userId = userId;
         history.question = question;
         history.answer = answer;
         history.sessionId = sessionId;
-        history.rag = rag;
         return history;
-    }
-
-    /**
-     * 获取完整的回答（包含RAG上下文）
-     *
-     * @return 包含上下文的完整回答
-     */
-    public String getAnswerWithContext() {
-        if (rag == null) {
-            return answer;
-        }
-        String context = rag.getContext();
-        return answer + (context != null ? "\n\n上下文信息:\n" + context : "");
     }
 
     /**
@@ -131,7 +111,8 @@ public class QAHistory {
      * @return 简化后的回答内容
      */
     public String getShortAnswer(int maxLength) {
-        if (answer == null) return "";
+        if (answer == null)
+            return "";
         return answer.length() > maxLength ? answer.substring(0, maxLength) + "..." : answer;
     }
 
@@ -141,7 +122,8 @@ public class QAHistory {
      * @return 问答处理时长描述
      */
     public String getDuration() {
-        if (createTime == null || updateTime == null) return "unknown";
+        if (createTime == null || updateTime == null)
+            return "unknown";
         long seconds = java.time.Duration.between(createTime, updateTime).getSeconds();
         return seconds + "s";
     }

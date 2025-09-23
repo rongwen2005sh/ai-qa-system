@@ -8,9 +8,6 @@ import com.ai.qa.user.api.dto.response.RegisterResponse;
 import com.ai.qa.user.api.dto.response.UpdatePasswordResponse;
 import com.ai.qa.user.api.dto.response.UserResponse;
 
-
-import java.util.Optional;
-
 /**
  * 用户服务接口
  * 定义用户相关的业务逻辑方法，包括身份认证、用户管理等功能

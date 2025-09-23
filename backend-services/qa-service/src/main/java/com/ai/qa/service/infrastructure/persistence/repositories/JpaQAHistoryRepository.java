@@ -43,7 +43,7 @@ public interface JpaQAHistoryRepository extends JpaRepository<QAHistoryPO, Long>
      * 根据用户ID分页查找QA历史记录
      * 支持分页和排序，提高大数据量查询性能
      *
-     * @param userId 用户ID
+     * @param userId   用户ID
      * @param pageable 分页参数，包含页码、每页大小和排序信息
      * @return 分页后的QA历史记录列表
      */
@@ -64,7 +64,7 @@ public interface JpaQAHistoryRepository extends JpaRepository<QAHistoryPO, Long>
      * 根据用户ID和会话ID联合查找QA历史记录，按时间降序排列
      * 用于精确获取特定用户在特定会话中的问答记录
      *
-     * @param userId 用户ID
+     * @param userId    用户ID
      * @param sessionId 会话ID
      * @return 符合条件的QA历史记录列表，按时间倒序排列
      */

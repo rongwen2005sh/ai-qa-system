@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-
 /**
  * JWT认证过滤器
  * 继承OncePerRequestFilter确保每次请求只过滤一次
@@ -37,61 +36,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * 核心过滤方法，处理每个HTTP请求
-     * @param request HTTP请求对象
-     * @param response HTTP响应对象
+     * 
+     * @param request     HTTP请求对象
+     * @param response    HTTP响应对象
      * @param filterChain 过滤器链，用于继续处理请求
      * @throws ServletException 可能抛出的Servlet异常
-     * @throws IOException 可能抛出的IO异常
+     * @throws IOException      可能抛出的IO异常
      */
+    @SuppressWarnings("null")
     @Override
-//    protected void doFilterInternal(
-//            HttpServletRequest request,
-//            HttpServletResponse response,
-//            FilterChain filterChain
-//    ) throws ServletException, IOException {
-//        String authHeader = request.getHeader("Authorization");
-//        String token = null;
-//        String username = null;
-//
-//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-//            token = authHeader.substring(7);
-//            try {
-//                username = jwtUtil.getUsernameFromToken(token);
-//            } catch (Exception e) {
-//                logger.error("Invalid JWT token: {}", e);
-//            }
-//        }
-//
-//        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-//            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-//            if (jwtUtil.validateToken(token)) {
-//                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-//                        userDetails, null, userDetails.getAuthorities()
-//                );
-//                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//                SecurityContextHolder.getContext().setAuthentication(authToken);
-//            }
-//        }
-//
-//        filterChain.doFilter(request, response);
-//    }
-
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-//        String path = request.getRequestURI();
-//
-//        System.out.println("JwtFilter: path=" + path + " method=" + request.getMethod());
+            FilterChain filterChain) throws ServletException, IOException {
+        // String path = request.getRequestURI();
+        //
+        // System.out.println("JwtFilter: path=" + path + " method=" +
+        // request.getMethod());
 
         // 允许匿名访问的接口直接放行
-//        if ("/api/user/login".equals(path) ||
-//                "/api/user/register".equals(path) ||
-//                request.getMethod().equalsIgnoreCase("OPTIONS")) {
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
+        // if ("/api/user/login".equals(path) ||
+        // "/api/user/register".equals(path) ||
+        // request.getMethod().equalsIgnoreCase("OPTIONS")) {
+        // filterChain.doFilter(request, response);
+        // return;
+        // }
 
         String path = request.getServletPath();
         System.out.println("JwtFilter: servletPath=" + path + " method=" + request.getMethod());
@@ -121,8 +90,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             if (jwtUtil.validateToken(token)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
+                        userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }

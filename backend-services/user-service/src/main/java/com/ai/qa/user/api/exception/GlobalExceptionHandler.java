@@ -1,6 +1,5 @@
 package com.ai.qa.user.api.exception;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +33,8 @@ public class GlobalExceptionHandler {
      * @return ResponseEntity 包含错误信息的响应实体
      */
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException ex, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException ex,
+            HttpServletRequest request) {
         // 记录警告日志，包含错误代码、消息和请求路径
         log.warn("业务异常: 错误代码={}, 错误消息={}, 请求路径={}",
                 ex.getErrorCode(), ex.getErrorMessage(), request.getRequestURI());
@@ -57,7 +57,8 @@ public class GlobalExceptionHandler {
      * @return ResponseEntity 包含详细校验错误信息的响应实体
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
         // 记录警告日志
         log.warn("参数校验异常: {}, 请求路径: {}", ex.getMessage(), request.getRequestURI());
 
@@ -93,8 +94,7 @@ public class GlobalExceptionHandler {
         // 构建通用的内部错误响应
         Map<String, Object> errorResponse = buildErrorResponse(
                 ErrCode.INTERNAL_SERVER_ERROR,
-                ErrCode.MSG_INTERNAL_ERROR
-        );
+                ErrCode.MSG_INTERNAL_ERROR);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
@@ -105,11 +105,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
-//    @ExceptionHandler(InvalidJwtException.class)
-//    public ResponseEntity<Map<String, Object>> handleInvalidJwt(InvalidJwtException ex) {
-//        Map<String, Object> error = buildErrorResponse(ErrCode.INVALID_TOKEN, ErrCode.MSG_INVALID_TOKEN);
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-//    }
+    // @ExceptionHandler(InvalidJwtException.class)
+    // public ResponseEntity<Map<String, Object>>
+    // handleInvalidJwt(InvalidJwtException ex) {
+    // Map<String, Object> error = buildErrorResponse(ErrCode.INVALID_TOKEN,
+    // ErrCode.MSG_INVALID_TOKEN);
+    // return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    // }
 
     /**
      * 构建统一的错误响应格式
@@ -146,12 +148,14 @@ public class GlobalExceptionHandler {
             case ErrCode.NOT_FOUND -> HttpStatus.NOT_FOUND;
             case ErrCode.CONFLICT -> HttpStatus.CONFLICT;
             case ErrCode.USER_NOT_FOUND,
-                 ErrCode.USER_ALREADY_EXISTS,
-                 ErrCode.PASSWORD_INCORRECT,
-                 ErrCode.PASSWORD_MISMATCH,
-                 ErrCode.INVALID_TOKEN -> HttpStatus.BAD_REQUEST;
+                    ErrCode.USER_ALREADY_EXISTS,
+                    ErrCode.PASSWORD_INCORRECT,
+                    ErrCode.PASSWORD_MISMATCH,
+                    ErrCode.INVALID_TOKEN ->
+                HttpStatus.BAD_REQUEST;
             case ErrCode.INTERNAL_SERVER_ERROR,
-                 ErrCode.SERVICE_UNAVAILABLE -> HttpStatus.INTERNAL_SERVER_ERROR;
+                    ErrCode.SERVICE_UNAVAILABLE ->
+                HttpStatus.INTERNAL_SERVER_ERROR;
             default -> HttpStatus.BAD_REQUEST; // 默认返回400错误
         };
     }

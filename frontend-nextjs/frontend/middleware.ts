@@ -1,21 +1,24 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   // Get the pathname of the request (e.g. /, /auth, /api/chat)
-  const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl;
 
   // Check if this is an API route that needs authentication
-  if (pathname.startsWith("/api/chat")) {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
+  if (pathname.startsWith("/api/qa/ask")) {
+    const token = request.headers.get("authorization")?.replace("Bearer ", "");
 
     //todo token 是否合法的校验
     if (!token) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
@@ -28,4 +31,4 @@ export const config = {
      */
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
-}
+};
