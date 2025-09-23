@@ -1,36 +1,24 @@
-# --- 阶段 1: 构建 Angular 前端 ---
-FROM node:20-alpine AS frontend-builder
+# 使用官方OpenJDK运行时作为基础镜像
+FROM openjdk:17-jdk-slim
+
+# 安装curl用于健康检查
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# 设置工作目录
 WORKDIR /app
 
-# (关键修复) 先安装 pnpm 工具
-RUN npm install -g pnpm
+# 复制Maven构建产物
+COPY target/*.jar app.jar
 
-# 复制依赖描述文件以利用缓存
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN pnpm install
-# 复制所有剩余源代码
-COPY frontend/ ./
-RUN pnpm run build
+# 暴露端口
+EXPOSE 8081
 
-# --- 阶段 2: 构建 Spring Boot 后端 ---
-FROM maven:3.8.5-openjdk-8 AS backend-builder
-WORKDIR /app
-# 缓存 Maven 依赖
-COPY backend/pom.xml .
-RUN mvn dependency:go-offline
-# 复制后端源代码
-COPY backend/src ./src
+# 设置JVM参数
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
-# (关键修复) 从前端构建产物的 browser 子目录中复制内容
-COPY --from=frontend-builder /app/dist/*/browser/* ./src/main/resources/static/
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8081/health || exit 1
 
-# 打包后端应用，此时前端文件已在 static 目录中
-RUN mvn package -DskipTests
-
-# --- 阶段 3: 创建最终的运行镜像 ---
-FROM eclipse-temurin:8-jre-alpine
-WORKDIR /app
-# 使用通配符复制 JAR 包
-COPY --from=backend-builder /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# 启动应用
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
