@@ -94,8 +94,8 @@ jobs:
       - name: Build and push API Gateway image
         uses: docker/build-push-action@v5
         with:
-          context: ./api-gateway
-          file: ./api-gateway/Dockerfile
+          context: ./backend-services/api-gateway
+          file: ./backend-services/api-gateway/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-api-gateway:latest
 
@@ -103,8 +103,8 @@ jobs:
       - name: Build and push User Service image
         uses: docker/build-push-action@v5
         with:
-          context: ./user-service
-          file: ./user-service/Dockerfile
+          context: ./backend-services/user-service
+          file: ./backend-services/user-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest
 
@@ -112,8 +112,8 @@ jobs:
       - name: Build and push QA Service image
         uses: docker/build-push-action@v5
         with:
-          context: ./qa-service
-          file: ./qa-service/Dockerfile
+          context: ./backend-services/qa-service
+          file: ./backend-services/qa-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest
           build-args: |
@@ -123,8 +123,8 @@ jobs:
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend # 假设前端项目在根目录的 frontend 文件夹下
-          file: ./frontend/Dockerfile
+          context: ./frontend-nextjs/frontend # 假设前端项目在根目录的 frontend 文件夹下
+          file: ./frontend-nextjs/frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
 
