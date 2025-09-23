@@ -49,7 +49,10 @@ jobs:
       # -B: Batch mode，避免交互式提示
       # clean package: 执行清理、编译、测试、打包等所有操作
       - name: Build with Maven
-        run: mvn -B clean package
+        run: |
+          cd backend-services
+          # 使用父pom.xml构建所有子模块
+          mvn -B clean package
 
   # --- 第二个任务：构建 Docker 镜像并推送到仓库 ---
   build-and-push-images:
