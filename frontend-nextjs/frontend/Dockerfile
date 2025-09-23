@@ -6,10 +6,10 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# 复制package文件
+# 复制package文件 - 安装所有依赖（包括开发依赖）
 COPY package.json package-lock.json* ./
 RUN \
-  if [ -f package-lock.json ]; then npm install --production --legacy-peer-deps; \
+  if [ -f package-lock.json ]; then npm install --legacy-peer-deps; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
