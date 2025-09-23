@@ -9,7 +9,7 @@ WORKDIR /app
 # 复制package文件
 COPY package.json package-lock.json* ./
 RUN \
-  if [ -f package-lock.json ]; then npm ci --only=production; \
+  if [ -f package-lock.json ]; then npm ci --only=production --legacy-peer-deps; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
@@ -20,7 +20,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # 设置环境变量
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # 构建应用
 RUN npm run build
@@ -29,8 +29,8 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # 创建非root用户
 RUN addgroup --system --gid 1001 nodejs
@@ -43,8 +43,7 @@ COPY --from=builder /app/public ./public
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# 复制构建产物，自动利用输出文件跟踪来减少镜像大小
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+# 复制构建产物
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -52,8 +51,8 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # 启动应用
 CMD ["node", "server.js"]
