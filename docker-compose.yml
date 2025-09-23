@@ -1,0 +1,84 @@
+services:
+  # MySQL 数据库
+  database:
+    image: mysql:8.0
+    container_name: ai-qa-mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - ai-qa-network
+
+  # User Service
+  user-service:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
+    container_name: ai-qa-user-service
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - database
+    environment:
+      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - ai-qa-network
+
+  # QA Service
+  qa-service:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
+    container_name: ai-qa-qa-service
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - database
+    environment:
+      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      GEMINI_API_KEY: ${GEMINI_API_KEY} # 添加这行
+    networks:
+      - ai-qa-network
+
+  # API Gateway
+  api-gateway:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
+    container_name: ai-qa-api-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - qa-service
+    networks:
+      - ai-qa-network
+
+  # Frontend
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
+    container_name: ai-qa-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    networks:
+      - ai-qa-network
+
+volumes:
+  db_data:
+
+networks:
+  ai-qa-network:
+    driver: bridge

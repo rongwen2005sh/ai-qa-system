@@ -45,7 +45,7 @@ springdoc:
 gemini:
   api:
     base-url: https://generativelanguage.googleapis.com/v1beta
-    key: AIzaSyCoT_zHfP1soMVGaP9p_96495Gnh0japWw # 从环境变量读取，如果没有则为空${GEMINI_API_KEY:}
+    key: ${GEMINI_API_KEY} # 从环境变量读取，如果没有则为空${GEMINI_API_KEY:}
     model: gemini-1.5-flash # 免费的Gemini模型，速度快，适合对话
 
 # 日志配置
