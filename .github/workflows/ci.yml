@@ -54,6 +54,16 @@ jobs:
           # 使用父pom.xml构建所有子模块
           mvn -B clean package
 
+      - name: Upload JAR artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-artifacts
+          path: |
+            backend-services/api-gateway/target/*.jar
+            backend-services/user-service/target/*.jar
+            backend-services/qa-service/target/*.jar
+          retention-days: 1
+
   # --- 第二个任务：构建 Docker 镜像并推送到仓库 ---
   build-and-push-images:
     # 任务的名称
