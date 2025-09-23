@@ -80,6 +80,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Download JAR artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: jar-artifacts
+          path: backend-services
+
       # 步骤 2: 登录到 Docker Hub
       # 这是将镜像推送到 Docker Hub 所必需的步骤。
       # 你需要先在 GitHub 仓库的 Settings -> Secrets and variables -> Actions 中设置好 DOCKERHUB_USERNAME 和 DOCKERHUB_TOKEN。
