@@ -1,35 +1,29 @@
-# 使用包含pnpm的官方镜像
+# Dockerfile should be in the frontend-nextjs/frontend directory
 FROM node:18-alpine
 
-# 安装pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml* ./
-
-# 使用corepack的pnpm
-RUN pnpm install --frozen-lockfile
-
+# Copy package files first for better caching
 COPY package*.json ./
 COPY tsconfig.json ./
-COPY next.config.js ./
+COPY next.config.ts ./
+
+# Copy the lib directory (relative to Dockerfile location)
 COPY ./lib ./lib
 COPY ./components ./components
 COPY ./contexts ./contexts
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Copy other necessary directories
+COPY ./public ./public
+COPY ./app ./app
+COPY ./types ./types
 
-RUN pnpm run build
+# Install dependencies
+RUN npm ci
 
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
-USER nextjs
+# Build the application
+RUN npm run build
 
 EXPOSE 3000
-ENV PORT=3000
 
-CMD ["pnpm", "start"]
+CMD ["npm", "start"]
