@@ -1,58 +1,31 @@
-# 使用官方Node.js运行时作为基础镜像
-FROM node:18-alpine AS base
+# 使用包含pnpm的官方镜像
+FROM node:18-alpine
 
-# 安装依赖阶段
-FROM base AS deps
+# 安装pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# 复制package文件 - 安装所有依赖（包括开发依赖）
-COPY package.json package-lock.json* ./
-RUN \
-  if [ -f package-lock.json ]; then npm install --legacy-peer-deps; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+COPY package.json pnpm-lock.yaml* ./
 
-# 构建阶段
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# 使用corepack的pnpm
+RUN pnpm install --frozen-lockfile
+
 COPY . .
-
-# 设置环境变量
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# 构建应用
-RUN npm run build
-
-# 生产运行阶段
-FROM base AS runner
-WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 创建非root用户
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# RUN pnpm run build
+RUN pnpm run dev
 
-# 复制构建产物
-COPY --from=builder /app/public ./public
-
-# 设置正确的权限
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# 复制构建产物
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
 
 USER nextjs
 
 EXPOSE 3000
-
 ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
-# 启动应用
-CMD ["node", "server.js"]
+CMD ["pnpm", "start"]
