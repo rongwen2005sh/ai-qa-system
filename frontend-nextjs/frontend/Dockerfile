@@ -8,10 +8,11 @@ RUN npm install -g pnpm
 # 首先列出当前目录内容
 RUN ls -la
 
-# 复制包管理文件
+# 首先复制配置文件
 COPY package.json pnpm-lock.yaml* ./
 COPY tsconfig.json ./
 COPY next.config.ts ./
+COPY next-env.d.ts ./
 
 # 使用更安全的复制方式，避免目录不存在的问题
 COPY . .
