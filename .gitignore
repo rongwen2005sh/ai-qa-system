@@ -58,8 +58,8 @@ dependency-reduced-pom.xml
 .mvn/wrapper/maven-wrapper.jar
 
 # 依赖下载
-**/lib/
-**/libs/
+#**/lib/
+#**/libs/
 
 # 配置文件（本地开发配置）
 **/application-local.yml
@@ -113,15 +113,18 @@ next-env.d.ts
 
 # ==================== 项目特定路径 ====================
 # 后端服务特定路径
-/api-gateway/target/
-/api-gateway/application.log
-/api-gateway/application.log.*  # 带时间戳的日志文件
-/qa-service/target/
-/qa-service/application.log
-/qa-service/application.log.*  # 带时间戳的日志文件
-/user-service/target/
-/user-service/application.log
-/user-service/application.log.*  # 带时间戳的日志文件
+/backend-services/api-gateway/lib
+/backend-services/api-gateway/target/
+/backend-services/api-gateway/application.log
+/backend-services/api-gateway/application.log.*  # 带时间戳的日志文件
+/backend-services/qa-service/lib
+/backend-services/qa-service/target/
+/backend-services/qa-service/application.log
+/backend-services/qa-service/application.log.*  # 带时间戳的日志文件
+/backend-services/user-service/lib
+/backend-services/user-service/target/
+/backend-services/user-service/application.log
+/backend-services/user-service/application.log.*  # 带时间戳的日志文件
 
 # 前端特定路径
 /frontend-nextjs/frontend/.next/
