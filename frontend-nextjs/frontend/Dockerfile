@@ -17,8 +17,7 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# RUN pnpm run build
-RUN pnpm run dev
+RUN pnpm run build
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
