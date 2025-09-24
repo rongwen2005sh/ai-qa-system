@@ -45,6 +45,16 @@ export function ChatWindow({
   const { token, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
+  // 生成会话ID的函数 - 使用useCallback包裹
+  const generateSessionId = useCallback((): string => {
+    // 使用uuid或时间戳+随机数
+    if (typeof uuidv4 === "function") {
+      return uuidv4();
+    }
+    // 备用方案：时间戳 + 随机数
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }, []);
+
   // 添加会话ID状态管理
   const [currentSessionId, setCurrentSessionId] = useState<string>(
     conversationId || ""
@@ -60,17 +70,7 @@ export function ChatWindow({
       // 使用传入的会话ID
       setCurrentSessionId(conversationId);
     }
-  }, [conversationId, currentSessionId]);
-
-  // 生成会话ID的函数
-  const generateSessionId = (): string => {
-    // 使用uuid或时间戳+随机数
-    if (typeof uuidv4 === "function") {
-      return uuidv4();
-    }
-    // 备用方案：时间戳 + 随机数
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
+  }, [conversationId, currentSessionId, generateSessionId]);
 
   const convertedInitialMessages = initialMessages.map((msg) => ({
     id: msg.id,
@@ -200,7 +200,16 @@ export function ChatWindow({
         setIsLoading(false);
       }
     },
-    [messages, conversationId, token, user, onFirstMessage, onMessageAdded]
+    [
+      messages,
+      currentSessionId,
+      conversationId,
+      token,
+      user,
+      onFirstMessage,
+      onMessageAdded,
+      generateSessionId,
+    ]
   );
 
   if (!user) {
