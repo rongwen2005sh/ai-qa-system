@@ -12,7 +12,12 @@ COPY package.json pnpm-lock.yaml* ./
 # 使用corepack的pnpm
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY next.config.js ./
+COPY ./lib ./lib
+COPY ./components ./components
+COPY ./contexts ./contexts
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
