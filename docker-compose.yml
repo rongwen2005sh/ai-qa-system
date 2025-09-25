@@ -26,7 +26,7 @@ services:
     depends_on:
       - database
     environment:
-      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_URL: ${MYSQL_URL} # 添加这行
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
     networks:
@@ -42,10 +42,10 @@ services:
     depends_on:
       - database
     environment:
-      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_URL: ${MYSQL_URL} # 添加这行
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      GEMINI_API_KEY: ${GEMINI_API_KEY} # 添加这行
+      GEMINI_API_KEY: ${GEMINI_API_KEY} # 添加Gemini密钥
     networks:
       - ai-qa-network
 
