@@ -80,13 +80,3 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-
-# 启用网关的actuator
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    gateway:
-      enabled: true
