@@ -60,11 +60,16 @@ logging:
     console: UTF-8
     file: UTF-8
 
+# 添加：修复 metrics 问题的配置
 management:
+  metrics:
+    enable:
+      process: false
+      system: false
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
       base-path: /actuator
   endpoint:
     health:
