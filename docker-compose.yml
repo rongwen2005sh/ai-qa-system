@@ -7,9 +7,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      # 删除这两行
-      # MYSQL_USER: ${MYSQL_USER}
-      # MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      # 删除这两行！不要设置 MYSQL_USER 和 MYSQL_PASSWORD
     ports:
       - "3306:3306"
     volumes:
@@ -17,7 +15,7 @@ services:
     networks:
       - ai-qa-network
 
-  # User Service
+  # User Service - 使用 root 用户连接
   user-service:
     image: ${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
     container_name: ai-qa-user-service
@@ -27,13 +25,13 @@ services:
     depends_on:
       - database
     environment:
-      SPRING_DATASOURCE_URL: ${MYSQL_URL} # 添加这行
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_ROOT_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
     networks:
       - ai-qa-network
 
-  # QA Service
+  # QA Service - 使用 root 用户连接
   qa-service:
     image: ${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
     container_name: ai-qa-qa-service
@@ -43,43 +41,9 @@ services:
     depends_on:
       - database
     environment:
-      SPRING_DATASOURCE_URL: ${MYSQL_URL} # 添加这行
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      GEMINI_API_KEY: ${GEMINI_API_KEY} # 添加Gemini密钥
+      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_ROOT_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     networks:
       - ai-qa-network
-
-  # API Gateway
-  api-gateway:
-    image: ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
-    container_name: ai-qa-api-gateway
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - user-service
-      - qa-service
-    networks:
-      - ai-qa-network
-
-  # Frontend
-  frontend:
-    image: ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
-    container_name: ai-qa-frontend
-    restart: always
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api-gateway
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
-    networks:
-      - ai-qa-network
-
-volumes:
-  db_data:
-
-networks:
-  ai-qa-network:
-    driver: bridge
