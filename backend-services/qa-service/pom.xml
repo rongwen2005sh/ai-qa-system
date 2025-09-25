@@ -89,6 +89,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- 使用 .env 文件加载器（最推荐） -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>java-dotenv</artifactId>
+            <version>5.2.2</version>
+        </dependency>
+
     </dependencies>
 
     <!-- 3. 添加构建插件，用于打包成可执行jar -->

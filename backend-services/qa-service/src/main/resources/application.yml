@@ -1,22 +1,29 @@
 server:
   port: 8082
+
 spring:
+  config:
+    import: "file:../../.env[.properties]"
   application:
     name: qa-service-rw
   cloud:
     nacos:
       server-addr: 54.219.180.170:8848
-      # 添加以下配置确保注册正确 IP
-      ip: 127.0.0.1
-      port: 8082
-
-  # 数据库配置
+      discovery:
+        # 移除或修正 IP 配置
+        # ip: 您的实际服务器IP
+        port: 8082
   datasource:
     url: jdbc:mysql://54.219.180.170:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: ai_qa_system
+    # another DB
+    #url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    #username: remote_user_group2
+    #password: Group2Password123!
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 5 # 减少连接池大小
+      maximum-pool-size: 5
       minimum-idle: 2
       connection-timeout: 30000
       idle-timeout: 600000
@@ -29,26 +36,18 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
     show-sql: true
-#logging:
-#  level:
-#    # 将你的FeignClient接口所在的包路径设置为DEBUG
-#    # 假设 UserClient 在 com.ai.qa.qaservice.feign 包下
-#    com.ai.qa.qaservice.feign: DEBUG
 
-# Swagger 配置 (正确的位置，与 spring 平级)
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
 
-# Gemini API配置
 gemini:
   api:
     base-url: https://generativelanguage.googleapis.com/v1beta
-    key: ${GEMINI_API_KEY} # 从环境变量读取，如果没有则为空${GEMINI_API_KEY:}
-    model: gemini-1.5-flash # 免费的Gemini模型，速度快，适合对话
+    key: ${GEMINI_API_KEY:}
+    model: gemini-1.5-flash
 
-# 日志配置
 logging:
   file:
     name: application.log
