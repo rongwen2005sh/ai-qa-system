@@ -7,7 +7,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      # 删除这两行！不要设置 MYSQL_USER 和 MYSQL_PASSWORD
+      # ✅ 正确：删除了 MYSQL_USER 和 MYSQL_PASSWORD
     ports:
       - "3306:3306"
     volumes:
@@ -26,7 +26,7 @@ services:
       - database
     environment:
       SPRING_DATASOURCE_URL: ${MYSQL_URL}
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_ROOT_USER}
+      SPRING_DATASOURCE_USERNAME: root #  修改：直接写 root，不要用变量
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
     networks:
       - ai-qa-network
@@ -42,8 +42,44 @@ services:
       - database
     environment:
       SPRING_DATASOURCE_URL: ${MYSQL_URL}
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_ROOT_USER}
+      SPRING_DATASOURCE_USERNAME: root # 修改：直接写 root，不要用变量
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     networks:
       - ai-qa-network
+
+  # API Gateway
+  api-gateway:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
+    container_name: ai-qa-api-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - qa-service
+    networks:
+      - ai-qa-network
+
+  # Frontend
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
+    container_name: ai-qa-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    networks:
+      - ai-qa-network
+
+# 添加：声明 volumes 部分
+volumes:
+  db_data:
+
+# 添加：声明 networks 部分
+networks:
+  ai-qa-network:
+    driver: bridge
