@@ -18,10 +18,9 @@ spring:
     # username: root
     # password: ai_qa_system
     # another DB
-    url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: remote_user_group2
-    password: Group2Password123!
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://database:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    username: root
+    password: root1234
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
