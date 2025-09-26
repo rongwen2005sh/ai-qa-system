@@ -58,6 +58,8 @@ services:
     depends_on:
       - user-service
       - qa-service
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://18.144.29.74:8080
     networks:
       - ai-qa-network
 

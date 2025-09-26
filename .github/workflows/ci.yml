@@ -143,6 +143,8 @@ jobs:
           file: ./frontend-nextjs/frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=http://18.144.29.74:8080
 
       # 步骤 8: 上传 docker-compose.yml 到 EC2 服务器
       - name: Upload docker-compose.yml to EC2

@@ -132,7 +132,7 @@ export function ChatWindow({
           sessionId: effectiveSessionId,
         };
 
-        console.log("Sending Qa request to:", `${API_BASE_URL}/api/user/login`);
+        console.log("Sending Qa request to:", `${API_BASE_URL}/api/qa/ask`); // 修正这一行
         console.log("发送QA请求，会话ID:", effectiveSessionId);
         console.log("QaRequestData:", requestData);
 
