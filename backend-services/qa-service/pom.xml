@@ -27,10 +27,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!-- Nacos服务发现 -->
+        <!-- Nacos 服务发现（锁定 2021.1，兼容 Nacos 1.x，无 gRPC） -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+            <version>2021.1</version>   <!-- ➜ 加这一行 -->
         </dependency>
         <!-- OpenFeign用于服务间调用 -->
         <dependency>
