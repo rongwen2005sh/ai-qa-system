@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid"; // 添加uuid库
 
 // 添加 API_BASE_URL 常量
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://18.144.29.74:8080";
 
 interface ChatWindowProps {
   conversationId?: string;
