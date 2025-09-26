@@ -132,8 +132,6 @@ jobs:
           file: ./backend-services/qa-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest
-          build-args: |
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 
       # 步骤 7: 构建并推送 Frontend 镜像
       - name: Build and push Frontend image
