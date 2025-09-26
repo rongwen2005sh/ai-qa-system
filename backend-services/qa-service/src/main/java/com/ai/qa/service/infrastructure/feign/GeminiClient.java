@@ -64,7 +64,7 @@ public class GeminiClient {
         this.restTemplate = createRestTemplateWithProxy();
 
         // 配置系统代理属性
-        configureSystemProxy();
+        // configureSystemProxy();
 
         log.info("GeminiClient初始化完成，已配置代理支持和超时设置");
     }
