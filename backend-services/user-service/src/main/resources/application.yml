@@ -7,21 +7,14 @@ spring:
     nacos:
       discovery:
         server-addr: 3.101.113.38:8848
-        # ip: 54.115.103.18 # 改为user-service所在服务器的公网IP
-        # port: 8081
-        # 添加以下配置确保注册正确 IP
         ip: 127.0.0.1
         port: 8081
   datasource:
-    # url: jdbc:mysql://54.219.180.170:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    # username: root
-    # password: ai_qa_system
-    # another DB
     url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: remote_user_group2
     password: Group2Password123!
     hikari:
-      maximum-pool-size: 5 # 减少连接池大小
+      maximum-pool-size: 5
       minimum-idle: 2
       connection-timeout: 30000
       idle-timeout: 600000
@@ -35,13 +28,11 @@ spring:
         format_sql: true
     show-sql: true
 
-# Swagger 配置 (正确的位置，与 spring 平级)
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
 
-# 日志配置
 logging:
   file:
     name: application.log
@@ -54,8 +45,8 @@ logging:
     file: UTF-8
 
 jwt:
-  secret: HhyD5jnwwGbyecOrbkAY6OEWNM/zDgF2qwFlF4MFAHznR4AaLweF8Xu71MF4TaYUfX7dRY9JIzOgF/yTYqx5Qg== # 生产环境建议使用复杂密钥并通过环境变量注入
-  expiration: 86400000 # 24小时（单位：毫秒）
+  secret: HhyD5jnwwGbyecOrbkAY6OEWNM/zDgF2qwFlF4MFAHznR4AaLweF8Xu71MF4TaYUfX7dRY9JIzOgF/yTYqx5Qg==
+  expiration: 86400000
 
 management:
   endpoints:
@@ -69,9 +60,6 @@ management:
       show-details: when_authorized
     info:
       enabled: true
-
-# 如果需要，添加健康检查细节
-management:
   health:
     db:
       enabled: true
