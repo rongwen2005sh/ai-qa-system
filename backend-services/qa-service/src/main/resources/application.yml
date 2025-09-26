@@ -6,13 +6,16 @@ spring:
     import: "optional:file:.env[.properties]" # 改为可选，当前目录
   application:
     name: qa-service-rw
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 3.101.113.38:8848
-        #ip: 127.0.0.1
-        #port: 8082
+  # cloud:
+  #   nacos:
+  #     discovery:
+  #       server-addr: 3.101.113.38:8848
+  #       #ip: 127.0.0.1
+  #       #port: 8082
   datasource:
+    # url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    # username: remote_user_group2
+    # password: Group2Password123!
     url: jdbc:mysql://database:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
     username: root
     password: root1234
@@ -41,11 +44,11 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
 
-gemini:
+deepseek:
   api:
-    base-url: https://generativelanguage.googleapis.com/v1beta
-    key: ${GEMINI_API_KEY:}
-    model: gemini-1.5-flash
+    base-url: https://api.deepseek.com/v1
+    key: ${DEEPSEEK_API_KEY:sk-57f30e394ce84ffa838c3cfd9bc34d55} # YOUR_DEEPSEEK_API_KEY_HERE 替换为实际的API Key
+    model: deepseek-chat
 
 logging:
   file:

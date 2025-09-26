@@ -28,20 +28,20 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <!-- Nacos服务发现 -->
-        <dependency>
+        <!-- <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-        </dependency>
+        </dependency> -->
         <!-- OpenFeign用于服务间调用 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
         <!-- LoadBalancer用于负载均衡 -->
-        <dependency>
+        <!-- <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
+        </dependency> -->
         <!-- Spring Boot Data JPA - 提供JPA数据访问功能 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

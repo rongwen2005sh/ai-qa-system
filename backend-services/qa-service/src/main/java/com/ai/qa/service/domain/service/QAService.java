@@ -2,8 +2,7 @@ package com.ai.qa.service.domain.service;
 
 import com.ai.qa.service.domain.model.QAHistory;
 import com.ai.qa.service.domain.repo.QAHistoryRepo;
-import com.ai.qa.service.infrastructure.feign.GeminiClient;
-import com.ai.qa.service.infrastructure.feign.UserClient;
+import com.ai.qa.service.infrastructure.feign.DeepSeekClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +18,13 @@ import java.util.List;
 public class QAService {
 
     @Autowired
-    private UserClient userClient;
-
-    @Autowired
     private QAHistoryRepo qaHistoryRepo;
 
     @Autowired // 添加Autowired注解
-    private GeminiClient geminiClient;
+    private DeepSeekClient deepSeekClient;
+
+    // @Autowired // 添加Autowired注解
+    // private GeminiClient geminiClient;
 
     /**
      * 处理用户问题并返回答案
@@ -65,8 +64,8 @@ public class QAService {
             // 构建包含RAG上下文的增强问题
             // String enhancedQuestion = buildEnhancedQuestion(question, rag);
 
-            // 调用Gemini客户端获取答案
-            String answer = geminiClient.askQuestion(question);
+            // 调用deepSeek客户端获取答案
+            String answer = deepSeekClient.askQuestion(question);
 
             // 可选：对答案进行后处理
             return postProcessAnswer(answer);

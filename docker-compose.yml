@@ -59,7 +59,7 @@ services:
       - user-service
       - qa-service
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://18.144.29.74:8080
+      NEXT_PUBLIC_API_BASE_URL: http://54.177.245.226:8080
     networks:
       - ai-qa-network
 
@@ -73,7 +73,7 @@ services:
     depends_on:
       - api-gateway
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://18.144.29.74:8080
+      NEXT_PUBLIC_API_BASE_URL: http://54.177.245.226:8080
     networks:
       - ai-qa-network
 

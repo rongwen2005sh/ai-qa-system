@@ -22,7 +22,7 @@
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
         <!-- Nacos服务发现，用于动态路由 -->
-        <dependency>
+        <!-- <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
@@ -33,7 +33,7 @@
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
@@ -60,11 +60,10 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>
-            <!-- 版本号会从你的 dependencyManagement 中继承 -->
-        </dependency>
+        </dependency> -->
     </dependencies>
 
     <!-- 3. 添加构建插件，用于打包成可执行jar -->

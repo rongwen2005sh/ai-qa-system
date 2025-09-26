@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 logging:
   file:
@@ -8,56 +8,36 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     reactor.netty.http.client: DEBUG
-    com.alibaba.nacos.client: DEBUG
 
 spring:
   application:
     name: api-gateway-rw
-  config:
-    import:
-      - "nacos:shared-config-rw.yml"
   cloud:
-    nacos:
-      server-addr: 3.101.113.38:8848
-      config:
-        file-extension: yml
-        group: DEFAULT_GROUP
     gateway:
       globalcors:
         cors-configurations:
           "[/**]":
-            allowed-origins:
-              - "http://localhost:3000"
-              - "http://127.0.0.1:3000"
-              - "http://18.144.29.74:3000"
-            allowed-methods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-              - PATCH
+            allowed-origins: "${ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://54.177.245.226:3000}"
+            allowed-methods: "*"
             allowed-headers: "*"
             allow-credentials: true
             max-age: 3600
       discovery:
         locator:
           enabled: false
-          lower-case-service-id: true
       routes:
         - id: user_service_route
-          uri: lb://user-service-rw
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/user/**
           filters:
             - StripPrefix=0
         - id: qa_service_route
-          uri: lb://qa-service-rw
+          uri: ${QA_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/qa/**
           filters:
             - StripPrefix=0
-          default-filters:
             - name: RequestRateLimiter
               args:
                 rate-limiter: "#{@inMemoryRateLimiter}"
