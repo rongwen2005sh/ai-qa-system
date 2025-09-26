@@ -168,6 +168,7 @@ jobs:
           port: 22
           script: |
             cd ~/aiqasystem-cicd
+            docker-compose down --volumes --remove-orphans
             docker-compose pull
-            docker-compose up -d --remove-orphans
+            docker-compose up -d
             docker image prune -f
