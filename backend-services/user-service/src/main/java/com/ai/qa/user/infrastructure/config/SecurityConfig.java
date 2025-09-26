@@ -1,9 +1,9 @@
 package com.ai.qa.user.infrastructure.config;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -62,43 +62,19 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // http
-        // .csrf(csrf -> csrf.disable())
-        // .sessionManagement(session ->
-        // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        // .authorizeHttpRequests(auth -> auth
-        // // 允许匿名访问的接口
-        // .antMatchers("/api/user/login", "/api/user/register").permitAll()
-        // .antMatchers("/swagger-ui.html", "/v3/api-docs/**",
-        // "/swagger-ui/**").permitAll()
-        // // 其他接口（包括 /updatePassword）需要认证
-        // .anyRequest().authenticated()
-        // )
-        // .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // .authorizeHttpRequests(auth -> auth
-                // // 允许匿名访问的接口（方法+路径同步）
-                // .antMatchers(HttpMethod.POST, "/api/user/login").permitAll()
-                // .antMatchers(HttpMethod.POST, "/api/user/register").permitAll()
-                // .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // .antMatchers("/swagger-ui.html", "/v3/api-docs/**",
-                // "/swagger-ui/**").permitAll()
-                // .anyRequest().authenticated()
-                // )
-                .authorizeHttpRequests(auth -> auth
-
-                        .antMatchers(HttpMethod.POST, "/api/user/login").permitAll()
-                        .antMatchers(HttpMethod.POST, "/api/user/register").permitAll()
-                        .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .antMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .antMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .antMatchers("/actuator/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+        return http
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeRequests()
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/user/login", "/api/user/register").permitAll()
+                .antMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .antMatchers("/actuator/health", "/actuator/info").permitAll()
+                .antMatchers("/actuator/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+                .and()
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 }
