@@ -1,34 +1,34 @@
 server:
-  port: 8080 # 所有后端请求的入口
+  port: 8080
+
 logging:
   file:
-    path: ./logs # 添加当前目录前缀
+    path: ./logs
     name: application.log
   level:
-    # 将 Gateway 的核心日志级别设置为 DEBUG
     org.springframework.cloud.gateway: DEBUG
-    # (可选) 将 Reactor Netty 的日志也设为 DEBUG，可以看到更底层的网络交互
     reactor.netty.http.client: DEBUG
     com.alibaba.nacos.client: DEBUG
+
 spring:
   application:
     name: api-gateway-rw
   config:
     import:
-      # 引入共享配置
       - "nacos:shared-config-rw.yml"
   cloud:
     nacos:
-      server-addr: 54.219.180.170:8848
+      server-addr: 3.101.113.38:8848
       config:
-        # 明确告诉 Nacos Config 默认的文件扩展名是 yml
         file-extension: yml
         group: DEFAULT_GROUP
     gateway:
       globalcors:
         cors-configurations:
           "[/**]":
-            allowed-origins: "http://localhost:3000"
+            allowed-origins:
+              - "http://localhost:3000"
+              - "http://127.0.0.1:3000"
             allowed-methods:
               - GET
               - POST
@@ -38,34 +38,24 @@ spring:
               - PATCH
             allowed-headers: "*"
             allow-credentials: true
-            exposed-headers:
-              - Authorization
-              - Content-Type
             max-age: 3600
       discovery:
         locator:
-          enabled: false # 开启基于服务发现的路由功能
-          lower-case-service-id: true # 将服务名转为小写路径，e.g., user-service -> /user-service/**
+          enabled: false
+          lower-case-service-id: true
       routes:
         - id: user_service_route
-          uri: lb://user-service-rw # lb:// 表示从Nacos负载均衡地选择一个user-service实例
-          #uri: http://localhost:8081
+          uri: lb://user-service-rw
           predicates:
-            - Path=/api/user/** # 匹配所有/api/user/开头的请求
-          # filters:
-          # - StripPrefix=2
-          # - StripPrefix=0
-          #- AddRequestHeader=Authorization, Bearer your-token-here # 添加认证头
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=0
         - id: qa_service_route
           uri: lb://qa-service-rw
-          #uri: http://localhost:8082
           predicates:
             - Path=/api/qa/**
-          #      default-filters:
-          #        # 配置默认的限流过滤器
-          #        - name: RequestRateLimiter
-          #          args:
-          #            key-resolver: '#{@ipKeyResolver}'
+          filters:
+            - StripPrefix=0
           default-filters:
             - name: RequestRateLimiter
               args:
@@ -75,7 +65,6 @@ spring:
                 burst-capacity: 100000
                 requested-tokens: 1
 
-# Swagger 配置 (正确的位置，与 spring 平级)
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

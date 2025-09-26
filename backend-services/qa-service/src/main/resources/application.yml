@@ -8,19 +8,19 @@ spring:
     name: qa-service-rw
   cloud:
     nacos:
-      server-addr: 54.219.180.170:8848
+      server-addr: 3.101.113.38:8848
       discovery:
         # 移除或修正 IP 配置
         # ip: 您的实际服务器IP
         port: 8082
   datasource:
-    url: jdbc:mysql://54.219.180.170:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: ai_qa_system
+    # url: jdbc:mysql://54.219.180.170:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    # username: root
+    # password: ai_qa_system
     # another DB
-    #url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    #username: remote_user_group2
-    #password: Group2Password123!
+    url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: remote_user_group2
+    password: Group2Password123!
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 5
