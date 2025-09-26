@@ -8,11 +8,10 @@ spring:
     name: qa-service-rw
   cloud:
     nacos:
-      server-addr: 3.101.113.38:8848
       discovery:
-        # 移除或修正 IP 配置
-        # ip: 您的实际服务器IP
-        port: 8082
+        server-addr: 3.101.113.38:8848
+        #ip: 127.0.0.1
+        #port: 8082
   datasource:
     # url: jdbc:mysql://54.219.180.170:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     # username: root
@@ -58,3 +57,22 @@ logging:
   charset:
     console: UTF-8
     file: UTF-8
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      enabled: true
+      show-details: when_authorized
+    info:
+      enabled: true
+    metrics:
+      enabled: false
+  metrics:
+    enable:
+      process: false
+      system: false
