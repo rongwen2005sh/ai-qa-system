@@ -1,14 +1,12 @@
 package com.ai.qa.service.infrastructure.feign;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,63 +57,9 @@ public class GeminiClient {
      * 构造函数
      * 初始化RestTemplate，配置代理支持和超时设置
      */
-    public GeminiClient() {
-        // 创建带代理的RestTemplate
-        this.restTemplate = createRestTemplateWithProxy();
-
-        // 配置系统代理属性
-        // configureSystemProxy();
-
-        log.info("GeminiClient初始化完成，已配置代理支持和超时设置");
-    }
-
-    /**
-     * 创建带代理配置的RestTemplate
-     */
-    private RestTemplate createRestTemplateWithProxy() {
-        // 创建代理对象
-        String proxyHost = "9.36.235.13";
-        int proxyPort = 8080;
-
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
-
-        // 创建请求工厂并配置代理和超时
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setProxy(proxy);
-        factory.setConnectTimeout(60000); // 连接超时60秒
-        factory.setReadTimeout(120000); // 读取超时120秒
-
-        RestTemplate restTemplate = new RestTemplate(factory);
-
-        log.info("RestTemplate代理配置完成: {}:{}", proxyHost, proxyPort);
-        log.info("超时设置: 连接60s, 读取120s");
-
-        return restTemplate;
-    }
-
-    /**
-     * 配置系统代理属性（备用方案）
-     */
-    private void configureSystemProxy() {
-        // 启用系统代理
-        System.setProperty("java.net.useSystemProxies", "true");
-
-        // 使用您的Mac代理配置
-        String proxyHost = "9.36.235.13";
-        String proxyPort = "8080";
-
-        // 设置HTTP代理
-        System.setProperty("http.proxyHost", proxyHost);
-        System.setProperty("http.proxyPort", proxyPort);
-
-        // 设置HTTPS代理
-        System.setProperty("https.proxyHost", proxyHost);
-        System.setProperty("https.proxyPort", proxyPort);
-
-        // 设置不使用代理的主机（本地服务）
-        System.setProperty("http.nonProxyHosts", "localhost|127.0.0.1|*.local|54.219.180.170");
-
-        log.info("系统代理属性配置完成: {}:{}", proxyHost, proxyPort);
+    public GeminiClient(@Qualifier("geminiRestTemplate") RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        log.info("GeminiClient 初始化完成，使用专用代理 RestTemplate");
     }
 
     /**
@@ -126,44 +70,34 @@ public class GeminiClient {
      * @throws RuntimeException 当API调用失败时抛出异常
      */
     public String askQuestion(String question) {
-        log.info("开始调用Gemini API，问题长度: {}", question.length());
+        log.info("开始调用 Gemini API，问题长度: {}", question.length());
 
-        // 检查API Key是否已配置
         if ("YOUR_API_KEY_HERE".equals(apiKey)) {
-            log.warn("Gemini API Key未配置，返回模拟回答");
+            log.warn("Gemini API Key 未配置，返回模拟回答");
             return generateMockResponse(question);
         }
 
         try {
-            // 构建请求URL
             String url = String.format("%s/models/%s:generateContent?key=%s",
                     baseUrl, model, apiKey);
 
-            // 构建请求体
             Map<String, Object> requestBody = buildRequestBody(question);
 
-            // 设置请求头
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // 创建HTTP请求实体
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-            // 发送POST请求
-            long startTime = System.currentTimeMillis();
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    url, HttpMethod.POST, requestEntity, Map.class);
-            long endTime = System.currentTimeMillis();
+            long start = System.currentTimeMillis();
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, Map.class);
+            long end = System.currentTimeMillis();
 
-            log.info("Gemini API调用成功，耗时: {}ms", endTime - startTime);
-
-            // 解析响应
+            log.info("Gemini API 调用成功，耗时: {} ms", end - start);
             return parseResponse(response.getBody());
 
         } catch (Exception e) {
-            log.error("调用Gemini API失败，可能是网络或地区限制问题: {}", e.getMessage());
+            log.error("调用 Gemini API 失败: {}", e.getMessage());
             log.info("使用模拟回答作为备用方案");
-            // 网络问题时使用模拟回答，而不是抛出异常
             return generateMockResponse(question);
         }
     }
