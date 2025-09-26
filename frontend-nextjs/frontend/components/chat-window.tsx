@@ -252,8 +252,10 @@ export function ChatWindow({
               AI 聊天助手
             </h1>
             <p className="text-muted-foreground mb-6 text-pretty">
-              我是您的智能助手，可以帮助您解答问题、提供建议或进行有趣的对话。支持
-              Markdown 格式和代码高亮。
+              我是您的智能助手，我是通过DeepSeek
+              API（模型：deepseek-chat）来回答。
+              可以帮助您解答问题、提供建议或进行有趣的对话。支持 Markdown
+              格式和代码高亮。
             </p>
 
             <div className="space-y-2">

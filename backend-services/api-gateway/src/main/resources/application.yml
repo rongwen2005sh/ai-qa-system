@@ -27,13 +27,13 @@ spring:
           enabled: false
       routes:
         - id: user_service_route
-          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          uri: ${USER_SERVICE_URL:http://user-service:8081} # http://localhost:8081
           predicates:
             - Path=/api/user/**
           filters:
             - StripPrefix=0
         - id: qa_service_route
-          uri: ${QA_SERVICE_URL:http://localhost:8082}
+          uri: ${QA_SERVICE_URL:http://qa-service:8082} # http://localhost:8082
           predicates:
             - Path=/api/qa/**
           filters:
