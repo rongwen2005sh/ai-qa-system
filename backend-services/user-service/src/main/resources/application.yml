@@ -10,9 +10,9 @@ spring:
         ip: 127.0.0.1
         port: 8081
   datasource:
-    url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: remote_user_group2
-    password: Group2Password123!
+    url: jdbc:mysql://database:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    username: root
+    password: root1234
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
@@ -27,6 +27,11 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
     show-sql: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
 
 springdoc:
   swagger-ui:
@@ -60,8 +65,9 @@ management:
       show-details: when_authorized
     info:
       enabled: true
-  health:
-    db:
-      enabled: true
-    diskspace:
-      enabled: true
+    metrics:
+      enabled: false
+  metrics:
+    enable:
+      process: false
+      system: false
