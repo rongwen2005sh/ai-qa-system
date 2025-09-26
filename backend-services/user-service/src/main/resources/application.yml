@@ -56,3 +56,24 @@ logging:
 jwt:
   secret: HhyD5jnwwGbyecOrbkAY6OEWNM/zDgF2qwFlF4MFAHznR4AaLweF8Xu71MF4TaYUfX7dRY9JIzOgF/yTYqx5Qg== # 生产环境建议使用复杂密钥并通过环境变量注入
   expiration: 86400000 # 24小时（单位：毫秒）
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      enabled: true
+      show-details: when_authorized
+    info:
+      enabled: true
+
+# 如果需要，添加健康检查细节
+management:
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
