@@ -15,7 +15,8 @@ public class GeminiRestTemplateConfig {
 
     @Bean("geminiRestTemplate")
     public RestTemplate geminiRestTemplate() {
-        String proxyHost = "9.36.235.13";
+        // String proxyHost = "9.36.235.13";
+        String proxyHost = "138.68.60.160";
         int proxyPort = 8080;
 
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
