@@ -47,7 +47,7 @@ springdoc:
 deepseek:
   api:
     base-url: https://api.deepseek.com/v1
-    key: ${DEEPSEEK_API_KEY:sk-57f30e394ce84ffa838c3cfd9bc34d55} # YOUR_DEEPSEEK_API_KEY_HERE 替换为实际的API Key
+    key: ${DEEPSEEK_API_KEY:YOUR_DEEPSEEK_API_KEY_HERE} # YOUR_DEEPSEEK_API_KEY_HERE 替换为实际的API Key
     model: deepseek-chat
 
 logging:
