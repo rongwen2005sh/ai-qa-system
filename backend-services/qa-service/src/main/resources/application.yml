@@ -3,6 +3,7 @@ server:
 
 spring:
   config:
+    # import: "optional:file:D:/dev/ai-qa-system/.env[.properties]"
     import: "optional:file:.env[.properties]" # 改为可选，当前目录
   application:
     name: qa-service-rw
@@ -40,9 +41,14 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
 
 springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
 
 deepseek:
   api:
