@@ -264,7 +264,7 @@ export function ChatWindow({
               </p>
               <div className="grid gap-2">
                 {[
-                  "解释一下人工智能的基本概念",
+                  // "解释一下人工智能的基本概念",
                   "帮我写一个简单的 Python 函数",
                   "推荐一些学习编程的资源",
                   "用 Markdown 格式介绍一下 React",
