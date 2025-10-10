@@ -10,12 +10,12 @@ spring:
   #       #ip: 127.0.0.1
   #       #port: 8081
   datasource:
-    url: jdbc:mysql://database:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
-    username: root
-    password: root1234
-    # url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
-    # username: remote_user_group2
-    # password: Group2Password123!
+    # url: jdbc:mysql://database:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    # username: root
+    # password: root1234
+    url: jdbc:mysql://9.78.190.130:3306/ai_qa_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    username: remote_user_group2
+    password: Group2Password123!
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2

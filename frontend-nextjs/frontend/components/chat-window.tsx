@@ -9,8 +9,10 @@ import { QARequest } from "@/types/qa"; // 根据实际路径导入
 import { v4 as uuidv4 } from "uuid"; // 添加uuid库
 
 // 添加 API_BASE_URL 常量
+// const API_BASE_URL =
+//   process.env.NEXT_PUBLIC_API_BASE_URL || "http://54.177.245.226:8080";
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://54.177.245.226:8080";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 interface ChatWindowProps {
   conversationId?: string;

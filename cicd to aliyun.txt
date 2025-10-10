@@ -1,0 +1,319 @@
+我有个一个应用，是github自动cicd到aws ec2上面去的。（github->打包镜像到dockerhub->aws ec2），我想在想改成github->打包镜像到dockerhub->阿里云虚拟机）自动部署的ci.yml和docker-compose.yml附上。
+
+
+--------------------------------------------------------------------------------------------
+
+根据你的需求，要将部署目标从 AWS EC2 改为阿里云虚拟机，需要修改 CI/CD 配置。以下是更新后的文件：
+
+## 1. 更新后的 `ci.yml`
+
+```yaml
+# 工作流的名称，会显示在 GitHub Actions 的 UI 界面中
+name: CI/CD for AI QA System
+
+# 工作流的触发条件
+on:
+  # 当有代码推送到 main 分支时触发
+  push:
+    branches: ["main"]
+  # 当有针对 main 分支的 Pull Request 被创建或更新时触发
+  pull_request:
+    branches: ["main"]
+
+# 定义工作流中的所有任务 (Jobs)
+jobs:
+  # --- 第一个任务：构建并测试后端微服务 ---
+  build-and-test-backend:
+    # 任务的名称，会显示在 UI 中
+    name: Build and Test Backend Services
+    # 运行此任务所需的虚拟机环境
+    runs-on: ubuntu-latest
+
+    # 任务的执行步骤
+    steps:
+      # 步骤 1: 检出代码
+      # 使用官方的 actions/checkout@v4 action 来获取仓库的最新代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步骤 2: 设置 Java 环境
+      # 使用官方的 actions/setup-java@v4 action 来安装和配置 JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      # 步骤 3: 缓存 Maven 依赖
+      # 为了加速构建，缓存下载过的 Maven 依赖包。
+      # 这样下次构建时，如果 pom.xml 没有变化，就可以直接使用缓存，节省大量时间。
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # 步骤 4: 使用 Maven 构建和测试
+      # -B: Batch mode，避免交互式提示
+      # clean package: 执行清理、编译、测试、打包等所有操作
+      - name: Build with Maven
+        run: |
+          cd backend-services
+          # 使用父pom.xml构建所有子模块
+          mvn -B clean package
+
+      - name: Upload JAR artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-artifacts
+          path: |
+            backend-services/api-gateway/target/*.jar
+            backend-services/user-service/target/*.jar
+            backend-services/qa-service/target/*.jar
+          retention-days: 1
+
+  # --- 第二个任务：构建 Docker 镜像并推送到仓库 ---
+  build-and-push-images:
+    # 任务的名称
+    name: Build and Push Docker Images
+    # 运行此任务所需的虚拟机环境
+    runs-on: ubuntu-latest
+
+    # 依赖关系：这个任务必须在 `build-and-test-backend` 成功完成后才能开始
+    needs: build-and-test-backend
+
+    # 任务的执行步骤
+    steps:
+      # 步骤 1: 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: jar-artifacts
+          path: backend-services
+
+      # 步骤 2: 登录到 Docker Hub
+      # 这是将镜像推送到 Docker Hub 所必需的步骤。
+      # 你需要先在 GitHub 仓库的 Settings -> Secrets and variables -> Actions 中设置好 DOCKERHUB_USERNAME 和 DOCKERHUB_TOKEN。
+      # DOCKERHUB_TOKEN 应该是一个 Access Token，而不是你的密码。
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 步骤 3: 设置 Docker Buildx
+      # Buildx 是一个 Docker CLI 插件，它扩展了 docker build 命令，支持多阶段构建等高级功能。
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 步骤 4: 构建并推送 API Gateway 镜像
+      # docker/build-push-action@v5 action 会自动完成构建和推送两个步骤。
+      # context: Dockerfile 所在的目录。
+      # file: Dockerfile 的具体路径。
+      # push: true 表示要推送到仓库。
+      # tags: 为镜像打上标签，格式通常是 "用户名/镜像名:版本号"。latest 是一个常用标签。
+      - name: Build and push API Gateway image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend-services/api-gateway
+          file: ./backend-services/api-gateway/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-api-gateway:latest
+
+      # 步骤 5: 构建并推送 User Service 镜像
+      - name: Build and push User Service image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend-services/user-service
+          file: ./backend-services/user-service/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest
+
+      # 步骤 6: 构建并推送 QA Service 镜像
+      - name: Build and push QA Service image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend-services/qa-service
+          file: ./backend-services/qa-service/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest
+
+      # 步骤 7: 构建并推送 Frontend 镜像
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend-nextjs/frontend
+          file: ./frontend-nextjs/frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=http://你的阿里云公网IP:8080
+
+      # 步骤 8: 上传 docker-compose.yml 到阿里云虚拟机
+      - name: Upload docker-compose.yml to Aliyun VM
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.ALIYUN_VM_HOST }}
+          username: ${{ secrets.ALIYUN_VM_USERNAME }}
+          key: ${{ secrets.ALIYUN_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "docker-compose.yml"
+          target: "~/aiqasystem-cicd/"
+          overwrite: true
+
+      # 步骤 9: 部署到阿里云虚拟机
+      - name: Deploy to Aliyun VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ALIYUN_VM_HOST }}
+          username: ${{ secrets.ALIYUN_VM_USERNAME }}
+          key: ${{ secrets.ALIYUN_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ~/aiqasystem-cicd
+            docker-compose down --volumes --remove-orphans
+            docker-compose pull
+            docker-compose up -d
+            docker image prune -f
+```
+
+## 2. 更新后的 `docker-compose.yml`
+
+```yaml
+services:
+  # MySQL 数据库
+  database:
+    image: mysql:8.0
+    container_name: ai-qa-mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      # ✅ 正确：删除了 MYSQL_USER 和 MYSQL_PASSWORD
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - ai-qa-network
+
+  # User Service - 使用 root 用户连接
+  user-service:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
+    container_name: ai-qa-user-service
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - database
+    environment:
+      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_USERNAME: root #  修改：直接写 root，不要用变量
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
+    networks:
+      - ai-qa-network
+
+  # QA Service - 使用 root 用户连接
+  qa-service:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
+    container_name: ai-qa-qa-service
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - database
+    environment:
+      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_USERNAME: root # 修改：直接写 root，不要用变量
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+    networks:
+      - ai-qa-network
+
+  # API Gateway
+  api-gateway:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
+    container_name: ai-qa-api-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - qa-service
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://你的阿里云公网IP:8080
+    networks:
+      - ai-qa-network
+
+  # Frontend
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
+    container_name: ai-qa-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://你的阿里云公网IP:8080
+    networks:
+      - ai-qa-network
+
+# 添加：声明 volumes 部分
+volumes:
+  db_data:
+
+# 添加：声明 networks 部分
+networks:
+  ai-qa-network:
+    driver: bridge
+```
+
+## 3. 需要在 GitHub Secrets 中配置的变量
+
+将以下变量添加到 GitHub Repository Settings → Secrets and variables → Actions：
+
+| Secret 名称 | 描述 | 示例值 |
+|-------------|------|---------|
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名 | `yourdockerhubusername` |
+| `DOCKERHUB_TOKEN` | Docker Hub Access Token | `dckr_pat_...` |
+| `ALIYUN_VM_HOST` | 阿里云虚拟机公网 IP | `123.123.123.123` |
+| `ALIYUN_VM_USERNAME` | 阿里云虚拟机登录用户名（通常是 root） | `root` |
+| `ALIYUN_SSH_PRIVATE_KEY` | 阿里云虚拟机 SSH 私钥 | `-----BEGIN RSA PRIVATE KEY-----...` |
+
+## 4. 阿里云虚拟机环境准备
+
+在阿里云虚拟机上需要安装：
+
+```bash
+# 安装 Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+# 安装 Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# 创建项目目录
+mkdir -p ~/aiqasystem-cicd
+```
+
+## 5. 主要修改点总结
+
+1. **CI/CD 配置**：
+   - 将 AWS EC2 相关的 secrets 改为阿里云虚拟机相关的 secrets
+   - 更新了部署步骤中的主机配置
+
+2. **Docker Compose 配置**：
+   - 将所有硬编码的 AWS IP 地址改为阿里云虚拟机的公网 IP
+   - 保持其他服务配置不变
+
+3. **环境变量**：
+   - 确保在阿里云虚拟机上设置了正确的环境变量文件（如 `.env`）
+
+这样修改后，你的应用就会自动部署到阿里云虚拟机而不是 AWS EC2 了。

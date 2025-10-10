@@ -5,8 +5,11 @@ import type {
   User,
 } from "../types/auth";
 
+// const API_BASE_URL =
+//   process.env.NEXT_PUBLIC_API_BASE_URL || "http://54.177.245.226:8080";
+
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://54.177.245.226:8080";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 class AuthAPI {
   private getAuthHeaders(token?: string) {
