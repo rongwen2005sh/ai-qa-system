@@ -5,10 +5,10 @@ name: CI/CD for AI QA System
 on:
   # 当有代码推送到 main 分支时触发
   push:
-    branches: ["main"]
+    branches: ["aliyun "]
   # 当有针对 main 分支的 Pull Request 被创建或更新时触发
   pull_request:
-    branches: ["main"]
+    branches: ["aliyun"]
 
 # 定义工作流中的所有任务 (Jobs)
 jobs:
@@ -142,26 +142,26 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=http://54.177.245.226:8080
+            NEXT_PUBLIC_API_BASE_URL=http://101.132.34.91:8080
 
-      # 步骤 8: 上传 docker-compose.yml 到 EC2 服务器
-      - name: Upload docker-compose.yml to EC2
+      # 步骤 8: 上传 docker-compose.yml 到 ECS 服务器
+      - name: Upload docker-compose.yml to Aliyun ECS
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          host: ${{ secrets.ALIYUN_ECS_HOST }}
+          username: ${{ secrets.ALIYUN_ECS_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           source: "docker-compose.yml"
           target: "~/aiqasystem-cicd/"
           overwrite: true
 
-      # 步骤 9: 部署到 EC2 服务器
-      - name: Deploy to EC2
+      # 步骤 9: 部署到 Aliyun ECS 服务器
+      - name: Deploy to Aliyun ECS
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          host: ${{ secrets.ALIYUN_ECS_HOST }}
+          username: ${{ secrets.ALIYUN_ECS_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |

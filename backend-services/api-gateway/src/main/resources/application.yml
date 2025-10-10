@@ -17,7 +17,7 @@ spring:
       globalcors:
         cors-configurations:
           "[/**]":
-            allowed-origins: "${ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://54.177.245.226:3000}"
+            allowed-origins: "${ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://101.132.34.91:3000}"
             allowed-methods: "*"
             allowed-headers: "*"
             allow-credentials: true
@@ -27,13 +27,13 @@ spring:
           enabled: false
       routes:
         - id: user_service_route
-          uri: ${USER_SERVICE_URL:} http://localhost:8081 # http://user-service:8081
+          uri: ${USER_SERVICE_URL:}  http://user-service:8081 # http://localhost:8081
           predicates:
             - Path=/api/user/**
           filters:
             - StripPrefix=0
         - id: qa_service_route
-          uri: ${QA_SERVICE_URL:http://localhost:8082 } # http://qa-service:8082
+          uri: ${QA_SERVICE_URL:http://qa-service:8082 } # http://localhost:8082
           predicates:
             - Path=/api/qa/**
           filters:
