@@ -5,7 +5,7 @@ name: CI/CD for AI QA System
 on:
   # 当有代码推送到 main 分支时触发
   push:
-    branches: ["aliyun "]
+    branches: ["aliyun"]
   # 当有针对 main 分支的 Pull Request 被创建或更新时触发
   pull_request:
     branches: ["aliyun"]
