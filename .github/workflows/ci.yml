@@ -165,11 +165,16 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            # 配置docker镜像加速器 #新追加
+            # 配置多个国内镜像加速器
             sudo mkdir -p /etc/docker
             sudo tee /etc/docker/daemon.json <<-'EOF'
             {
-              "registry-mirrors": ["https://dt46cht7.mirror.aliyuncs.com"]
+              "registry-mirrors": [
+                "https://docker.mirrors.ustc.edu.cn",
+                "https://hub-mirror.c.163.com",
+                "https://mirror.baidubce.com",
+                "https://dockerproxy.com"
+              ]
             }
             EOF
             sudo systemctl daemon-reload
@@ -182,48 +187,29 @@ jobs:
             # 停止所有容器
             docker-compose down --volumes --remove-orphans
 
-            # 拉取镜像的重试函数
-            pull_with_retry() {
-                local image=$1
-                local retries=3
-                local count=0
-                
-                while [ $count -lt $retries ]; do
-                    echo "尝试拉取镜像: $image (第 $((count+1)) 次尝试)"
-                    if docker pull $image; then
-                        echo "✅ 成功拉取: $image"
-                        return 0
-                    else
-                        echo "❌ 拉取失败，等待15秒后重试..."
-                        sleep 15
-                        count=$((count+1))
-                    fi
-                done
-                echo "💥 无法拉取镜像: $image，已达到最大重试次数"
-                return 1
-            }
+            cd ~/aiqasystem-cicd
+            docker-compose down --volumes --remove-orphans
 
-            # 设置环境变量（从GitHub Secrets传递）
             export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
 
-            # docker-compose pull
             echo "开始拉取基础镜像..."
-            pull_with_retry mysql:8.0
+            docker pull docker.mirrors.ustc.edu.cn/library/mysql:8.0
 
-            echo "开始拉取应用镜像..."
+            echo "开始拉取应用镜像（通过国内镜像源）..."
             echo "DOCKERHUB_USERNAME 值为: ${DOCKERHUB_USERNAME}"
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
+
+            # 通过国内镜像源拉取自定义镜像
+            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
+            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
+            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
+            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
+
+            # 重新tag为原始名称（兼容docker-compose.yml）
+            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-user-service:latest ${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
+            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest ${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
+            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
+            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-frontend:latest ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
 
             # 启动服务
-            echo "启动所有服务..."
             docker-compose up -d
-
-            # 检查服务状态
-            echo "服务状态："
             docker-compose ps
-
-            # 清理无用镜像
-            docker image prune -f
