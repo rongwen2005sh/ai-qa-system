@@ -64,10 +64,10 @@ jobs:
             backend-services/qa-service/target/*.jar
           retention-days: 1
 
-  # --- 第二个任务：构建 Docker 镜像并推送到仓库 ---
-  build-and-push-images:
+  # --- 第二个任务：构建 Docker 镜像并直接传输到ECS ---
+  build-and-transfer-images:
     # 任务的名称
-    name: Build and Push Docker Images
+    name: Build and Transfer Docker Images
     # 运行此任务所需的虚拟机环境
     runs-on: ubuntu-latest
 
@@ -86,65 +86,39 @@ jobs:
           name: jar-artifacts
           path: backend-services
 
-      # 步骤 2: 登录到 Docker Hub
-      # 这是将镜像推送到 Docker Hub 所必需的步骤。
-      # 你需要先在 GitHub 仓库的 Settings -> Secrets and variables -> Actions 中设置好 DOCKERHUB_USERNAME 和 DOCKERHUB_TOKEN。
-      # DOCKERHUB_TOKEN 应该是一个 Access Token，而不是你的密码。
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # 步骤 3: 设置 Docker Buildx
-      # Buildx 是一个 Docker CLI 插件，它扩展了 docker build 命令，支持多阶段构建等高级功能。
+      # 步骤 2: 设置 Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 步骤 4: 构建并推送 API Gateway 镜像
-      # docker/build-push-action@v5 action 会自动完成构建和推送两个步骤。
-      # context: Dockerfile 所在的目录。
-      # file: Dockerfile 的具体路径。
-      # push: true 表示要推送到仓库。
-      # tags: 为镜像打上标签，格式通常是 "用户名/镜像名:版本号"。latest 是一个常用标签。
-      - name: Build and push API Gateway image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend-services/api-gateway
-          file: ./backend-services/api-gateway/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-api-gateway:latest
+      # 步骤 3: 构建 Docker 镜像（不推送）
+      - name: Build API Gateway image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-api-gateway:latest ./backend-services/api-gateway
 
-      # 步骤 5: 构建并推送 User Service 镜像
-      - name: Build and push User Service image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend-services/user-service
-          file: ./backend-services/user-service/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest
+      - name: Build User Service image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest ./backend-services/user-service
 
-      # 步骤 6: 构建并推送 QA Service 镜像
-      - name: Build and push QA Service image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend-services/qa-service
-          file: ./backend-services/qa-service/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest
+      - name: Build QA Service image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest ./backend-services/qa-service
 
-      # 步骤 7: 构建并推送 Frontend 镜像
-      - name: Build and push Frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend-nextjs/frontend
-          file: ./frontend-nextjs/frontend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
-          build-args: |
-            NEXT_PUBLIC_API_BASE_URL=http://101.132.179.6:8080
+      - name: Build Frontend image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=http://101.132.179.6:8080 \
+            ./frontend-nextjs/frontend
 
-      # 步骤 8: 上传 docker-compose.yml 到 ECS 服务器
+      # 步骤 4: 保存 Docker 镜像为 tar 文件
+      - name: Save Docker images to tar files
+        run: |
+          docker save -o api-gateway.tar ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-api-gateway:latest
+          docker save -o user-service.tar ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest
+          docker save -o qa-service.tar ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest
+          docker save -o frontend.tar ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
+          ls -lh *.tar
+
+      # 步骤 5: 上传 docker-compose.yml 到 ECS 服务器
       - name: Upload docker-compose.yml to Aliyun ECS
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -156,7 +130,18 @@ jobs:
           target: "~/aiqasystem-cicd/"
           overwrite: true
 
-      # 步骤 9: 部署到 Aliyun ECS 服务器
+      # 步骤 6: 上传 Docker 镜像文件到 ECS
+      - name: Upload Docker images to ECS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.ALIYUN_ECS_HOST }}
+          username: ${{ secrets.ALIYUN_ECS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "*.tar"
+          target: "~/aiqasystem-cicd/"
+
+      # 步骤 7: 部署到 Aliyun ECS 服务器
       - name: Deploy to Aliyun ECS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -165,51 +150,45 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            # 配置多个国内镜像加速器
-            sudo mkdir -p /etc/docker
-            sudo tee /etc/docker/daemon.json <<-'EOF'
-            {
-              "registry-mirrors": [
-                "https://docker.mirrors.ustc.edu.cn",
-                "https://hub-mirror.c.163.com",
-                "https://mirror.baidubce.com",
-                "https://dockerproxy.com"
-              ]
-            }
-            EOF
-            sudo systemctl daemon-reload
-            sudo systemctl restart docker
-            sleep 10
-
-            # 从docker把镜像pull下来，然后用docker-compose启动
             cd ~/aiqasystem-cicd
+
+            echo "=== 检查传输的镜像文件 ==="
+            ls -lh *.tar
 
             # 停止所有容器
+            echo "停止所有容器..."
             docker-compose down --volumes --remove-orphans
 
-            cd ~/aiqasystem-cicd
-            docker-compose down --volumes --remove-orphans
+            # 加载应用镜像
+            echo "加载应用镜像..."
+            docker load -i api-gateway.tar && echo "✅ API Gateway 镜像加载成功"
+            docker load -i user-service.tar && echo "✅ User Service 镜像加载成功"
+            docker load -i qa-service.tar && echo "✅ QA Service 镜像加载成功"
+            docker load -i frontend.tar && echo "✅ Frontend 镜像加载成功"
 
-            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+            # 拉取 MySQL 基础镜像（使用国内源）
+            echo "拉取 MySQL 基础镜像..."
+            docker pull hub-mirror.c.163.com/library/mysql:8.0
+            docker tag hub-mirror.c.163.com/library/mysql:8.0 mysql:8.0
+            echo "✅ MySQL 镜像准备完成"
 
-            echo "开始拉取基础镜像..."
-            docker pull docker.mirrors.ustc.edu.cn/library/mysql:8.0
-
-            echo "开始拉取应用镜像（通过国内镜像源）..."
-            echo "DOCKERHUB_USERNAME 值为: ${DOCKERHUB_USERNAME}"
-
-            # 通过国内镜像源拉取自定义镜像
-            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
-            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
-            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
-            docker pull docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
-
-            # 重新tag为原始名称（兼容docker-compose.yml）
-            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-user-service:latest ${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
-            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest ${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
-            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
-            docker tag docker.mirrors.ustc.edu.cn/${DOCKERHUB_USERNAME}/ai-qa-frontend:latest ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
+            # 检查所有镜像是否就绪
+            echo "=== 当前所有镜像 ==="
+            docker images
 
             # 启动服务
+            echo "启动所有服务..."
             docker-compose up -d
+
+            # 检查服务状态
+            echo "=== 服务状态 ==="
             docker-compose ps
+
+            echo "=== 容器日志 ==="
+            docker-compose logs --tail=10
+
+            # 清理临时文件
+            echo "清理临时文件..."
+            rm -f *.tar
+
+            echo "✅ 部署完成！"
