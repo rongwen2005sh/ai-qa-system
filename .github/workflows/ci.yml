@@ -142,7 +142,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=http://101.132.34.91:8080
+            NEXT_PUBLIC_API_BASE_URL=http://101.132.179.6:8080
 
       # 步骤 8: 上传 docker-compose.yml 到 ECS 服务器
       - name: Upload docker-compose.yml to Aliyun ECS

@@ -6,7 +6,7 @@ import type {
 } from "../types/auth";
 
 // const API_BASE_URL =
-//   process.env.NEXT_PUBLIC_API_BASE_URL || "http://101.132.34.91:8080";
+//   process.env.NEXT_PUBLIC_API_BASE_URL || "http://101.132.179.6:8080";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
