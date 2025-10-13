@@ -208,11 +208,11 @@ jobs:
             pull_with_retry mysql:8.0
 
             echo "开始拉取应用镜像..."
-            echo "DOCKERHUB_USERNAME 值为: ${DOCKERHUB_USERNAME}"
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-user-service:latest
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
-            pull_with_retry ${DOCKERHUB_USERNAME}/ai-qa-frontend:latest
+            echo "DOCKERHUB_USERNAME 值为: ${secrets.DOCKERHUB_USERNAME}"
+            pull_with_retry ${secrets.DOCKERHUB_USERNAME}/ai-qa-user-service:latest
+            pull_with_retry ${secrets.DOCKERHUB_USERNAME}/ai-qa-qa-service:latest
+            pull_with_retry ${secrets.DOCKERHUB_USERNAME}/ai-qa-api-gateway:latest
+            pull_with_retry ${secrets.DOCKERHUB_USERNAME}/ai-qa-frontend:latest
 
             # 启动服务
             echo "启动所有服务..."
