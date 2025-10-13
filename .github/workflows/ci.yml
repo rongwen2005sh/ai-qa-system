@@ -165,6 +165,23 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
+            # 配置docker镜像加速器 #新追加
+            sudo mkdir -p /etc/docker
+            sudo tee /etc/docker/daemon.json <<-'EOF'
+            {
+              "registry-mirrors": [
+                "https://registry.cn-hangzhou.aliyuncs.com",
+                "https://docker.mirrors.ustc.edu.cn",
+                "https://hub-mirror.c.163.com"
+              ],
+              "max-concurrent-downloads": 3,
+              "max-download-attempts": 5
+            }
+            EOF
+            sudo systemctl daemon-reload
+            sudo systemctl restart docker
+
+            # 从docker把镜像pull下来，然后用docker-compose启动
             cd ~/aiqasystem-cicd
             docker-compose down --volumes --remove-orphans
             docker-compose pull
