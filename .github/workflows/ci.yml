@@ -166,11 +166,21 @@ jobs:
             docker load -i qa-service.tar && echo "✅ QA Service 镜像加载成功"
             docker load -i frontend.tar && echo "✅ Frontend 镜像加载成功"
 
-            # 拉取 MySQL 基础镜像（使用国内源）
-            echo "拉取 MySQL 基础镜像..."
-            docker pull hub-mirror.c.163.com/library/mysql:8.0
-            docker tag hub-mirror.c.163.com/library/mysql:8.0 mysql:8.0
-            echo "✅ MySQL 镜像准备完成"
+            # 检查MySQL镜像是否存在，不存在则尝试拉取
+            echo "检查MySQL镜像..."
+            if ! docker images mysql:8.0 | grep -q "mysql"; then
+              echo "MySQL镜像不存在，尝试拉取..."
+              # 尝试多个国内镜像源
+              docker pull hub-mirror.c.163.com/library/mysql:8.0 && \
+                docker tag hub-mirror.c.163.com/library/mysql:8.0 mysql:8.0 && \
+                echo "✅ MySQL 镜像拉取成功" || \
+                docker pull mirror.baidubce.com/library/mysql:8.0 && \
+                docker tag mirror.baidubce.com/library/mysql:8.0 mysql:8.0 && \
+                echo "✅ MySQL 镜像拉取成功" || \
+                echo "❌ MySQL 镜像拉取失败，请手动处理"
+            else
+              echo "✅ MySQL 镜像已存在，跳过拉取"
+            fi
 
             # 检查所有镜像是否就绪
             echo "=== 当前所有镜像 ==="
@@ -180,15 +190,35 @@ jobs:
             echo "启动所有服务..."
             docker-compose up -d
 
+            # 等待服务启动
+            sleep 10
+
             # 检查服务状态
             echo "=== 服务状态 ==="
             docker-compose ps
 
-            echo "=== 容器日志 ==="
-            docker-compose logs --tail=10
+            echo "=== 关键服务健康检查 ==="
+            # 检查MySQL是否就绪
+            echo "检查MySQL连接..."
+            docker exec ai-qa-mysql-db mysqladmin ping -h localhost -uroot -p'$MYSQL_ROOT_PASSWORD' 2>/dev/null && echo "✅ MySQL 连接正常" || echo "⚠️ MySQL 连接检查失败"
+
+            # 检查应用服务健康
+            echo "检查应用服务..."
+            curl -f http://localhost:8081/actuator/health >/dev/null 2>&1 && echo "✅ User Service 健康" || echo "⚠️ User Service 健康检查失败"
+            curl -f http://localhost:8082/actuator/health >/dev/null 2>&1 && echo "✅ QA Service 健康" || echo "⚠️ QA Service 健康检查失败"
+            curl -f http://localhost:8080/actuator/health >/dev/null 2>&1 && echo "✅ API Gateway 健康" || echo "⚠️ API Gateway 健康检查失败"
+
+            echo "=== 容器日志（最近错误） ==="
+            docker-compose logs --tail=20 | grep -i error || echo "未发现错误日志"
 
             # 清理临时文件
             echo "清理临时文件..."
             rm -f *.tar
 
-            echo "✅ 部署完成！"
+            echo "🎉 部署完成！"
+            echo "📊 服务访问地址："
+            echo "  前端应用: http://101.132.179.6:3000"
+            echo "  API网关: http://101.132.179.6:8080"
+            echo "  User服务: http://101.132.179.6:8081"
+            echo "  QA服务: http://101.132.179.6:8082"
+            echo "  数据库: 101.132.179.6:3306"
