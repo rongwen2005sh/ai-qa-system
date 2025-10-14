@@ -7,13 +7,26 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      # ✅ 正确：删除了 MYSQL_USER 和 MYSQL_PASSWORD
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     networks:
       - ai-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-uroot",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
+      timeout: 20s
+      retries: 10
+      start_period: 30s
 
   # User Service - 使用 root 用户连接
   user-service:
@@ -23,13 +36,19 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${MYSQL_URL}
-      SPRING_DATASOURCE_USERNAME: root #  修改：直接写 root，不要用变量
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     networks:
       - ai-qa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   # QA Service - 使用 root 用户连接
   qa-service:
@@ -39,14 +58,20 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${MYSQL_URL}
-      SPRING_DATASOURCE_USERNAME: root # 修改：直接写 root，不要用变量
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 使用 root 密码
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
     networks:
       - ai-qa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   # API Gateway
   api-gateway:
@@ -56,12 +81,19 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - user-service
-      - qa-service
+      user-service:
+        condition: service_healthy
+      qa-service:
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://101.132.179.6:8080
     networks:
       - ai-qa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   # Frontend
   frontend:
@@ -71,17 +103,16 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - api-gateway
+      api-gateway:
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://101.132.179.6:8080
     networks:
       - ai-qa-network
 
-# 添加：声明 volumes 部分
 volumes:
   db_data:
 
-# 添加：声明 networks 部分
 networks:
   ai-qa-network:
     driver: bridge

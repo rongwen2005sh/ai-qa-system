@@ -106,7 +106,7 @@ jobs:
       - name: Build Frontend image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest \
-            --build-arg NEXT_PUBLIC_API_BASE_URL=http://101.132.34.91:8080 \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=http://101.132.179.6:8080 \
             ./frontend-nextjs/frontend
 
       # 步骤 4: 保存 Docker 镜像为 tar 文件
@@ -116,7 +116,6 @@ jobs:
           docker save -o user-service.tar ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest
           docker save -o qa-service.tar ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest
           docker save -o frontend.tar ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest
-          echo "=== 生成的镜像文件 ==="
           ls -lh *.tar
 
       # 步骤 5: 上传 docker-compose.yml 到 ECS 服务器
@@ -153,120 +152,17 @@ jobs:
           script: |
             cd ~/aiqasystem-cicd
 
-            echo "=== 检查传输的镜像文件 ==="
-            ls -lh *.tar
-
-            # 停止所有容器
-            echo "停止所有容器..."
+            echo "=== 停止现有服务 ==="
             docker-compose down --volumes --remove-orphans
 
-            # 加载应用镜像
-            echo "加载应用镜像..."
-            docker load -i api-gateway.tar && echo "✅ API Gateway 镜像加载成功"
-            docker load -i user-service.tar && echo "✅ User Service 镜像加载成功"
-            docker load -i qa-service.tar && echo "✅ QA Service 镜像加载成功"
-            docker load -i frontend.tar && echo "✅ Frontend 镜像加载成功"
-
-            # 检查MySQL镜像是否存在，不存在则尝试拉取
-            echo "检查MySQL镜像..."
-            if ! docker images mysql:8.0 | grep -q "mysql"; then
-              echo "MySQL镜像不存在，尝试拉取..."
-              # 尝试多个国内镜像源
-              docker pull hub-mirror.c.163.com/library/mysql:8.0 && \
-                docker tag hub-mirror.c.163.com/library/mysql:8.0 mysql:8.0 && \
-                echo "✅ MySQL 镜像拉取成功" || \
-                docker pull mirror.baidubce.com/library/mysql:8.0 && \
-                docker tag mirror.baidubce.com/library/mysql:8.0 mysql:8.0 && \
-                echo "✅ MySQL 镜像拉取成功" || \
-                echo "❌ MySQL 镜像拉取失败，请手动处理"
-            else
-              echo "✅ MySQL 镜像已存在，跳过拉取"
-            fi
-
-            # 检查所有镜像是否就绪
-            echo "=== 当前所有镜像 ==="
-            docker images
-
-            # 启动服务
-            echo "启动所有服务..."
+            echo "=== 启动所有服务（带健康检查）==="
             docker-compose up -d
 
-            # 等待服务启动
-            sleep 10
+            echo "=== 等待所有服务就绪 ==="
+            # 等待所有服务健康状态
+            timeout 180s bash -c 'until docker-compose ps | grep -q "healthy"; do sleep 10; done' || echo "部分服务可能仍在启动中"
 
-            # 检查服务状态
-            echo "=== 服务状态 ==="
+            echo "=== 最终服务状态 ==="
             docker-compose ps
 
-            echo "=== 关键服务健康检查 ==="
-            # 检查MySQL是否就绪
-            echo "检查MySQL连接..."
-            if docker exec ai-qa-mysql-db mysqladmin ping -h localhost --silent; then
-              echo "✅ MySQL 连接正常"
-            else
-              echo "⚠️ MySQL 连接检查失败，可能还在启动中"
-              sleep 10
-              if docker exec ai-qa-mysql-db mysqladmin ping -h localhost --silent; then
-                echo "✅ MySQL 连接正常（第二次检查）"
-              else
-                echo "❌ MySQL 连接失败"
-              fi
-            fi
-
-            # 检查应用服务健康
-            echo "检查应用服务..."
-            for i in {1..3}; do
-              if curl -f http://localhost:8081/actuator/health >/dev/null 2>&1; then
-                echo "✅ User Service 健康"
-                break
-              elif [ $i -eq 3 ]; then
-                echo "❌ User Service 健康检查失败"
-              else
-                sleep 5
-              fi
-            done
-
-            for i in {1..3}; do
-              if curl -f http://localhost:8082/actuator/health >/dev/null 2>&1; then
-                echo "✅ QA Service 健康"
-                break
-              elif [ $i -eq 3 ]; then
-                echo "❌ QA Service 健康检查失败"
-              else
-                sleep 5
-              fi
-            done
-
-            for i in {1..3}; do
-              if curl -f http://localhost:8080/actuator/health >/dev/null 2>&1; then
-                echo "✅ API Gateway 健康"
-                break
-              elif [ $i -eq 3 ]; then
-                echo "❌ API Gateway 健康检查失败"
-              else
-                sleep 5
-              fi
-            done
-
-            echo "=== 容器日志（最近错误） ==="
-            docker-compose logs --tail=20 | grep -i error || echo "未发现错误日志"
-
-            # 检查外部访问
-            echo "=== 外部访问测试 ==="
-            curl -s -o /dev/null -w "前端服务(3000): %{http_code}\n" http://localhost:3000 || echo "前端服务不可访问"
-            curl -s -o /dev/null -w "API网关(8080): %{http_code}\n" http://localhost:8080 || echo "API网关不可访问"
-
-            # 清理临时文件
-            echo "清理临时文件..."
-            rm -f *.tar
-
-            echo "🎉 部署完成！"
-            echo "📊 服务访问地址："
-            echo "  前端应用: http://101.132.34.91:3000"
-            echo "  API网关: http://101.132.34.91:8080"
-            echo "  User服务: http://101.132.34.91:8081"
-            echo "  QA服务: http://101.132.34.91:8082"
-            echo "  数据库: 101.132.34.91:3306"
-
-
-            
+            echo "🎉 部署完成！所有服务已按依赖顺序启动"
