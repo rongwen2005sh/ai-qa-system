@@ -1,16 +1,15 @@
-# 依赖目录
+# 依赖目录（会在容器内重新安装）
 node_modules/
 .npm
-.pnpm-store
+.pnpm
 
-# 构建输出
-.next/
-dist/
-out/
+# 开发环境构建缓存
+.next/cache/
 
-# 环境变量文件
-.env*
-!.env.example
+# 环境变量文件（生产环境使用不同的配置）
+.env.local
+.env.development
+.env.test
 
 # 日志文件
 *.log
@@ -46,7 +45,11 @@ Thumbs.db
 coverage/
 .jest/
 
-# Docker 相关
-Dockerfile*
-docker-compose*
-.dockerignore
+# 文档
+README.md
+
+# TypeScript 构建信息
+*.tsbuildinfo
+
+# ESLint 缓存
+.eslintcache
