@@ -155,14 +155,19 @@ jobs:
             echo "=== 停止现有服务 ==="
             docker-compose down --volumes --remove-orphans
 
-            echo "=== 启动所有服务（带健康检查）==="
+            echo "=== 启动所有服务 ==="
             docker-compose up -d
 
-            echo "=== 等待所有服务就绪 ==="
-            # 等待所有服务健康状态
-            timeout 180s bash -c 'until docker-compose ps | grep -q "healthy"; do sleep 10; done' || echo "部分服务可能仍在启动中"
+            echo "=== 等待基础服务启动（60秒）==="
+            sleep 60
 
-            echo "=== 最终服务状态 ==="
+            echo "=== 服务状态 ==="
             docker-compose ps
 
-            echo "🎉 部署完成！所有服务已按依赖顺序启动"
+            echo "=== 快速健康检查（不阻塞）==="
+            # 快速检查，失败也不阻塞流程
+            curl -f http://localhost:8081/actuator/health >/dev/null 2>&1 && echo "✅ User Service 健康" || echo "⚠️ User Service 启动中"
+            curl -f http://localhost:8082/actuator/health >/dev/null 2>&1 && echo "✅ QA Service 健康" || echo "⚠️ QA Service 启动中"
+            curl -f http://localhost:8080/actuator/health >/dev/null 2>&1 && echo "✅ API Gateway 健康" || echo "⚠️ API Gateway 启动中"
+
+            echo "🎉 部署完成！Docker Compose 健康检查会在后台继续"
