@@ -129,6 +129,8 @@ jobs:
           source: "docker-compose.yml"
           target: "~/aiqasystem-cicd/"
           overwrite: true
+          timeout: 300
+          command_timeout: 300
 
       # 步骤 6: 上传 Docker 镜像文件到 ECS
       - name: Upload Docker images to ECS
@@ -140,6 +142,8 @@ jobs:
           port: 22
           source: "*.tar"
           target: "~/aiqasystem-cicd/"
+          timeout: 600 # 10分钟
+          command_timeout: 600
 
       # 步骤 7: 部署到 Aliyun ECS 服务器
       - name: Deploy to Aliyun ECS
