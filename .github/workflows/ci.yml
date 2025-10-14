@@ -159,19 +159,37 @@ jobs:
             echo "=== 停止现有服务 ==="
             docker-compose down --volumes --remove-orphans
 
-            echo "=== 启动所有服务 ==="
-            docker-compose up -d
+            echo "=== 加载 Docker 镜像 ==="
+            docker load -i api-gateway.tar
+            docker load -i user-service.tar
+            docker load -i qa-service.tar
+            docker load -i frontend.tar
 
-            echo "=== 等待基础服务启动（60秒）==="
-            sleep 60
+            echo "=== 启动核心服务（数据库、微服务、网关）==="
+            docker-compose up -d database user-service qa-service api-gateway
+
+            echo "=== 等待基础服务启动（120秒）==="
+            sleep 120
 
             echo "=== 服务状态 ==="
             docker-compose ps
 
-            echo "=== 快速健康检查（不阻塞）==="
-            # 快速检查，失败也不阻塞流程
-            curl -f http://localhost:8081/actuator/health >/dev/null 2>&1 && echo "✅ User Service 健康" || echo "⚠️ User Service 启动中"
-            curl -f http://localhost:8082/actuator/health >/dev/null 2>&1 && echo "✅ QA Service 健康" || echo "⚠️ QA Service 启动中"
-            curl -f http://localhost:8080/actuator/health >/dev/null 2>&1 && echo "✅ API Gateway 健康" || echo "⚠️ API Gateway 启动中"
+            echo "=== 检查 API Gateway 连接 ==="
+            curl -f http://localhost:8080/actuator/health && echo "✅ API Gateway 健康" || echo "❌ API Gateway 异常"
 
-            echo "🎉 部署完成！Docker Compose 健康检查会在后台继续"
+            echo "=== 启动前端服务 ==="
+            docker-compose up -d frontend
+
+            echo "=== 等待前端服务启动（60秒）==="
+            sleep 60
+
+            echo "=== 最终服务状态 ==="
+            docker-compose ps
+
+            echo "=== 健康检查汇总 ==="
+            curl -f http://localhost:8081/actuator/health >/dev/null 2>&1 && echo "✅ User Service 健康" || echo "❌ User Service 异常"
+            curl -f http://localhost:8082/actuator/health >/dev/null 2>&1 && echo "✅ QA Service 健康" || echo "❌ QA Service 异常"
+            curl -f http://localhost:8080/actuator/health >/dev/null 2>&1 && echo "✅ API Gateway 健康" || echo "❌ API Gateway 异常"
+            curl -f http://localhost:3000 >/dev/null 2>&1 && echo "✅ Frontend 健康" || echo "❌ Frontend 异常"
+
+            echo "🎉 部署完成！"
