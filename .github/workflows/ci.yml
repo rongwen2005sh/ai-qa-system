@@ -159,11 +159,24 @@ jobs:
             echo "=== 停止现有服务 ==="
             docker-compose down --volumes --remove-orphans
 
+            echo "=== 清理旧镜像 ==="
+            # 删除所有相关的旧镜像
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-api-gateway:latest 2>/dev/null || true
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest 2>/dev/null || true
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest 2>/dev/null || true
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest 2>/dev/null || true
+
+            echo "=== 清理悬空镜像 ==="
+            docker image prune -f
+
             echo "=== 加载 Docker 镜像 ==="
             docker load -i api-gateway.tar
             docker load -i user-service.tar
             docker load -i qa-service.tar
             docker load -i frontend.tar
+
+            echo "=== 检查镜像加载情况 ==="
+            docker images | grep ai-qa
 
             echo "=== 启动核心服务（数据库、微服务、网关）==="
             docker-compose up -d database user-service qa-service api-gateway
