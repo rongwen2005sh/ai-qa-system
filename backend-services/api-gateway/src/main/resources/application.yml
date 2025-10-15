@@ -1,14 +1,6 @@
 server:
   port: ${SERVER_PORT:8080}
 
-logging:
-  file:
-    path: ./logs
-    name: application.log
-  level:
-    org.springframework.cloud.gateway: DEBUG
-    reactor.netty.http.client: DEBUG
-
 spring:
   application:
     name: api-gateway-rw
@@ -46,7 +38,43 @@ spring:
                 burst-capacity: 100000
                 requested-tokens: 1
 
+logging:
+  file:
+    name: application.log
+    path: logs
+  level:
+    com.ai.qa.service: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  charset:
+    console: UTF-8
+    file: UTF-8
+
 springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      enabled: true
+      show-details: when_authorized
+    info:
+      enabled: true
+    metrics:
+      enabled: false
+  metrics:
+    enable:
+      process: false
+      system: false
