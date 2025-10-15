@@ -2,7 +2,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# 安装 pnpm 和 curl（用于健康检查）
+# 安装 pnpm 和 curl（用于健康检查）- 保持这个配置
 RUN npm install -g pnpm && \
     apk add --no-cache curl
 
