@@ -153,20 +153,18 @@ jobs:
           username: ${{ secrets.ALIYUN_ECS_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          command_timeout: 1800s # 增加整体脚本超时时间到30分钟
           script: |
             cd ~/aiqasystem-cicd
 
             echo "=== 停止现有服务 ==="
-            docker-compose down --volumes --remove-orphans
+            timeout 60s docker-compose down --volumes --remove-orphans || true
 
             echo "=== 清理旧镜像 ==="
-            # 删除所有相关的旧镜像
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-api-gateway:latest 2>/dev/null || true
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-user-service:latest 2>/dev/null || true
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-qa-service:latest 2>/dev/null || true
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/ai-qa-frontend:latest 2>/dev/null || true
-
-            echo "=== 清理悬空镜像 ==="
             docker image prune -f
 
             echo "=== 加载 Docker 镜像 ==="
@@ -178,37 +176,65 @@ jobs:
             echo "=== 检查镜像加载情况 ==="
             docker images | grep ai-qa
 
-            echo "=== 启动核心服务（数据库、微服务、网关）==="
-            # docker-compose up -d database user-service qa-service api-gateway
+            echo "=== 启动所有服务 ==="
+            docker-compose up -d
 
-            echo "=== 启动核心服务（数据库database）==="
-            docker-compose up -d database
-            echo "=== 等待database启动（120秒）==="
-            sleep 120
+            echo "=== 等待服务启动（使用健康检查）==="
 
-            echo "=== 启动核心服务（微服务user-service）==="
-            docker-compose up -d user-service
-            echo "=== 等待user-service启动（120秒）==="
-            sleep 120
+            # 等待数据库健康
+            echo "等待数据库启动..."
+            for i in {1..30}; do
+                if docker-compose ps database | grep -q "(healthy)"; then
+                    echo "✅ 数据库已健康"
+                    break
+                fi
+                echo "等待数据库健康... ($i/30)"
+                sleep 10
+            done
 
-            echo "=== 启动核心服务（微服务qa-service）==="
-            docker-compose up -d qa-service
-            echo "=== 等待qa-service启动（120秒）==="
-            sleep 120
+            # 等待用户服务健康
+            echo "等待用户服务启动..."
+            for i in {1..30}; do
+                if docker-compose ps user-service | grep -q "(healthy)"; then
+                    echo "✅ 用户服务已健康"
+                    break
+                fi
+                echo "等待用户服务健康... ($i/30)"
+                sleep 10
+            done
 
-            echo "=== 启动核心服务（微服务api-gateway）==="
-            docker-compose up -d api-gateway
-            echo "=== 等待api-gateway启动（180秒）==="
-            sleep 180
+            # 等待QA服务健康
+            echo "等待QA服务启动..."
+            for i in {1..30}; do
+                if docker-compose ps qa-service | grep -q "(healthy)"; then
+                    echo "✅ QA服务已健康"
+                    break
+                fi
+                echo "等待QA服务健康... ($i/30)"
+                sleep 10
+            done
 
-            echo "=== 服务状态 ==="
-            docker-compose ps
+            # 等待API网关健康 - 增加更多重试
+            echo "等待API网关启动..."
+            for i in {1..60}; do
+                if docker-compose ps api-gateway | grep -q "(healthy)"; then
+                    echo "✅ API网关已健康"
+                    break
+                fi
+                echo "等待API网关健康... ($i/60)"
+                sleep 10
+            done
 
-            echo "=== 启动前端服务（前端frontend）==="
-            docker-compose up -d frontend
-
-            echo "=== 等待前端服务启动（300秒）==="
-            sleep 300
+            # 等待前端健康
+            echo "等待前端启动..."
+            for i in {1..60}; do
+                if docker-compose ps frontend | grep -q "(healthy)"; then
+                    echo "✅ 前端已健康"
+                    break
+                fi
+                echo "等待前端健康... ($i/60)"
+                sleep 10
+            done
 
             echo "=== 最终服务状态 ==="
             docker-compose ps
