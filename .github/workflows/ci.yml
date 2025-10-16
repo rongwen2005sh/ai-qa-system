@@ -179,22 +179,36 @@ jobs:
             docker images | grep ai-qa
 
             echo "=== 启动核心服务（数据库、微服务、网关）==="
-            docker-compose up -d database user-service qa-service api-gateway
+            # docker-compose up -d database user-service qa-service api-gateway
 
-            echo "=== 等待基础服务启动（120秒）==="
+            echo "=== 启动核心服务（数据库database）==="
+            docker-compose up -d database
+            echo "=== 等待database启动（120秒）==="
             sleep 120
+
+            echo "=== 启动核心服务（微服务user-service）==="
+            docker-compose up -d user-service
+            echo "=== 等待user-service启动（120秒）==="
+            sleep 120
+
+            echo "=== 启动核心服务（微服务qa-service）==="
+            docker-compose up -d qa-service
+            echo "=== 等待qa-service启动（120秒）==="
+            sleep 120
+
+            echo "=== 启动核心服务（微服务api-gateway）==="
+            docker-compose up -d api-gateway
+            echo "=== 等待api-gateway启动（180秒）==="
+            sleep 180
 
             echo "=== 服务状态 ==="
             docker-compose ps
 
-            echo "=== 检查 API Gateway 连接 ==="
-            curl -f http://localhost:8080/actuator/health && echo "✅ API Gateway 健康" || echo "❌ API Gateway 异常"
-
-            echo "=== 启动前端服务 ==="
+            echo "=== 启动前端服务（前端frontend）==="
             docker-compose up -d frontend
 
-            echo "=== 等待前端服务启动（180秒）==="
-            sleep 180
+            echo "=== 等待前端服务启动（300秒）==="
+            sleep 300
 
             echo "=== 最终服务状态 ==="
             docker-compose ps
