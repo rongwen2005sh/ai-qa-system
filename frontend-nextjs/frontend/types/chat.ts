@@ -9,6 +9,7 @@ export interface Conversation {
   }>;
   createdAt: Date;
   updatedAt: Date;
+  isHistory?: boolean; // 添加可选字段
 }
 
 export interface ChatMessage {

@@ -18,6 +18,51 @@ function HomePage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const { user, token } = useAuth();
 
+  // 添加调试日志
+  useEffect(() => {
+    console.log("当前活动对话ID:", activeConversationId);
+    console.log(
+      "当前活动对话:",
+      conversations.find((conv) => conv.id === activeConversationId)
+    );
+    console.log("所有对话数量:", conversations.length);
+  }, [activeConversationId, conversations]);
+
+  /**
+   * 将历史对话转换为当前对话格式
+   */
+  const convertHistoryToConversation = useCallback(
+    (history: HistoryConversation): Conversation => {
+      const conversationId = history.sessionId || history.id;
+
+      return {
+        id: conversationId,
+        title: history.question
+          ? history.question.substring(0, 30) +
+            (history.question.length > 30 ? "..." : "")
+          : "历史对话",
+        messages: [
+          {
+            id: `${history.id}_user`,
+            role: "user" as const,
+            content: history.question || "",
+            timestamp: new Date(history.createTime || Date.now()),
+          },
+          {
+            id: `${history.id}_assistant`,
+            role: "assistant" as const,
+            content: history.answer || "",
+            timestamp: new Date(history.createTime || Date.now()),
+          },
+        ],
+        createdAt: new Date(history.createTime || Date.now()),
+        updatedAt: new Date(history.createTime || Date.now()),
+        isHistory: true, // 标记为历史对话
+      };
+    },
+    []
+  );
+
   /**
    * 加载用户历史对话
    */
@@ -33,81 +78,86 @@ function HomePage() {
 
       console.log("Loaded history conversations:", historyConversations);
 
+      if (!historyConversations || historyConversations.length === 0) {
+        console.log("No history conversations found");
+        return;
+      }
+
       // 转换历史对话数据
       const convertedConversations: Conversation[] = historyConversations.map(
-        (history: HistoryConversation) => {
-          // 添加类型注解
-          // 使用 sessionId 作为对话ID，如果没有 sessionId 则使用历史记录ID
-          const conversationId = history.sessionId || history.id;
-
-          return {
-            id: conversationId,
-            title: history.question
-              ? history.question.substring(0, 30) +
-                (history.question.length > 30 ? "..." : "")
-              : "历史对话",
-            messages: [
-              {
-                id: `${history.id}_user`,
-                role: "user" as const,
-                content: history.question || "",
-                timestamp: new Date(history.createTime || Date.now()),
-              },
-              {
-                id: `${history.id}_assistant`,
-                role: "assistant" as const,
-                content: history.answer || "",
-                timestamp: new Date(history.createTime || Date.now()),
-              },
-            ],
-            createdAt: new Date(history.createTime || Date.now()),
-            updatedAt: new Date(history.createTime || Date.now()),
-          };
-        }
+        convertHistoryToConversation
       );
 
       setConversations((prev) => {
-        // 使用 Map 来确保 ID 唯一性，后出现的对话会覆盖先出现的
+        // 创建映射来去重和合并对话
         const conversationMap = new Map<string, Conversation>();
 
-        // 先添加现有的对话
-        prev.forEach((conv) => conversationMap.set(conv.id, conv));
+        // 先添加历史对话（服务器数据优先）
+        convertedConversations.forEach((conv) => {
+          conversationMap.set(conv.id, conv);
+        });
 
-        // 添加历史对话，如果有重复 ID 会覆盖
-        convertedConversations.forEach((conv) =>
-          conversationMap.set(conv.id, conv)
-        );
+        // 再添加现有对话，但不覆盖历史对话
+        prev.forEach((conv) => {
+          if (!conversationMap.has(conv.id)) {
+            conversationMap.set(conv.id, conv);
+          }
+        });
 
         // 转换为数组并按更新时间排序
-        const uniqueConversations = Array.from(conversationMap.values()).sort(
+        const mergedConversations = Array.from(conversationMap.values()).sort(
           (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
         );
 
-        console.log("Merged conversations:", uniqueConversations);
-        return uniqueConversations;
+        console.log("Merged conversations:", mergedConversations);
+        return mergedConversations;
       });
+
+      // 移除自动设置第一个历史对话为活动对话的逻辑
+      // 这样登录后会保持空会话状态
+      console.log("历史对话已加载，但未设置活动对话");
     } catch (error) {
       console.error("Failed to load conversation history:", error);
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [user?.id, token]);
+  }, [user?.id, token, convertHistoryToConversation]);
 
   /**
-   * 处理加载历史对话
+   * 处理加载历史对话（侧边栏回调）
    */
   const handleLoadConversations = useCallback(
     (loadedConversations: HistoryConversation[]) => {
-      // 这个函数现在由 loadUserHistory 处理，但保留以保持接口一致
-      console.log("Conversations loaded in sidebar:", loadedConversations);
+      // 如果通过侧边栏加载了对话，转换为当前格式并合并
+      if (loadedConversations && loadedConversations.length > 0) {
+        const convertedConversations: Conversation[] = loadedConversations.map(
+          convertHistoryToConversation
+        );
+
+        setConversations((prev) => {
+          const conversationMap = new Map<string, Conversation>();
+
+          // 先添加现有对话
+          prev.forEach((conv) => conversationMap.set(conv.id, conv));
+
+          // 添加新加载的对话，不覆盖现有对话
+          convertedConversations.forEach((conv) => {
+            if (!conversationMap.has(conv.id)) {
+              conversationMap.set(conv.id, conv);
+            }
+          });
+
+          return Array.from(conversationMap.values()).sort(
+            (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+          );
+        });
+      }
     },
-    []
+    [convertHistoryToConversation]
   );
 
   /**
    * 根据第一条消息内容生成对话标题
-   * @param firstMessage 第一条消息内容
-   * @returns 生成的标题（截断至30字符）
    */
   const generateConversationTitle = (firstMessage: string): string => {
     const title =
@@ -118,11 +168,11 @@ function HomePage() {
   };
 
   /**
-   * 处理新建聊天：创建新对话并设置为活动对话
+   * 处理新建聊天
    */
   const handleNewChat = useCallback(() => {
     const newConversation: Conversation = {
-      id: generateUniqueId("conv"), // 使用带前缀的唯一 ID
+      id: generateUniqueId("conv"),
       title: "新对话",
       messages: [],
       createdAt: new Date(),
@@ -131,25 +181,25 @@ function HomePage() {
 
     setConversations((prev) => {
       // 确保新对话的ID不重复
-      if (prev.some((conv) => conv.id === newConversation.id)) {
-        newConversation.id = generateUniqueId("conv");
-      }
-      return [newConversation, ...prev];
+      const finalId = prev.some((conv) => conv.id === newConversation.id)
+        ? generateUniqueId("conv")
+        : newConversation.id;
+
+      return [{ ...newConversation, id: finalId }, ...prev];
     });
     setActiveConversationId(newConversation.id);
   }, []);
 
   /**
-   * 处理选择对话：设置活动对话ID
-   * @param conversationId 要选择的对话ID
+   * 处理选择对话
    */
   const handleSelectConversation = useCallback((conversationId: string) => {
+    console.log("选择对话:", conversationId);
     setActiveConversationId(conversationId);
   }, []);
 
   /**
-   * 处理删除对话：从列表中移除指定对话
-   * @param conversationId 要删除的对话ID
+   * 处理删除对话
    */
   const handleDeleteConversation = useCallback(
     (conversationId: string) => {
@@ -164,9 +214,7 @@ function HomePage() {
   );
 
   /**
-   * 处理重命名对话：更新指定对话的标题
-   * @param conversationId 要重命名的对话ID
-   * @param newTitle 新标题
+   * 处理重命名对话
    */
   const handleRenameConversation = useCallback(
     (conversationId: string, newTitle: string) => {
@@ -182,15 +230,14 @@ function HomePage() {
   );
 
   /**
-   * 处理新增消息：向当前活动对话添加新消息
-   * @param message 新增的消息对象（包含角色和内容）
+   * 处理新增消息
    */
   const handleMessageAdded = useCallback(
     (message: { role: "user" | "assistant"; content: string }) => {
       if (!activeConversationId) return;
 
       const newMessage = {
-        id: generateUniqueId("msg"), // 使用带前缀的唯一 ID
+        id: generateUniqueId("msg"),
         role: message.role,
         content: message.content,
         timestamp: new Date(),
@@ -212,8 +259,7 @@ function HomePage() {
   );
 
   /**
-   * 处理第一条消息：根据第一条消息内容生成对话标题
-   * @param content 第一条消息内容
+   * 处理第一条消息
    */
   const handleFirstMessage = useCallback(
     (content: string) => {
@@ -261,8 +307,6 @@ function HomePage() {
 
       {/* 主聊天区域 */}
       <div className="flex-1 flex flex-col min-h-0">
-        {" "}
-        {/* 添加 min-h-0 防止 flex 溢出 */}
         <ChatWindow
           conversationId={activeConversationId}
           conversationTitle={activeConversation?.title}

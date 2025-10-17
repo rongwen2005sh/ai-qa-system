@@ -5,8 +5,8 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { Bot, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
-import { QARequest } from "@/types/qa"; // 根据实际路径导入
-import { v4 as uuidv4 } from "uuid"; // 添加uuid库
+import { QARequest } from "@/types/qa";
+import { v4 as uuidv4 } from "uuid";
 
 // 添加 API_BASE_URL 常量
 const API_BASE_URL =
@@ -48,42 +48,51 @@ export function ChatWindow({
   const { token, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // 生成会话ID的函数 - 使用useCallback包裹
+  // 生成会话ID的函数
   const generateSessionId = useCallback((): string => {
-    // 使用uuid或时间戳+随机数
     if (typeof uuidv4 === "function") {
       return uuidv4();
     }
-    // 备用方案：时间戳 + 随机数
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }, []);
 
-  // 添加会话ID状态管理
+  // 会话ID状态管理
   const [currentSessionId, setCurrentSessionId] = useState<string>(
     conversationId || ""
   );
+
   // 初始化或重置会话ID
   useEffect(() => {
     if (!conversationId && !currentSessionId) {
-      // 生成新的会话ID
       const newSessionId = generateSessionId();
       setCurrentSessionId(newSessionId);
       console.log("生成新的会话ID:", newSessionId);
     } else if (conversationId && conversationId !== currentSessionId) {
-      // 使用传入的会话ID
       setCurrentSessionId(conversationId);
+      console.log("更新会话ID:", conversationId);
     }
   }, [conversationId, currentSessionId, generateSessionId]);
 
-  const convertedInitialMessages = initialMessages.map((msg) => ({
-    id: msg.id,
-    role: msg.role as "user" | "assistant",
-    content: msg.content,
-  }));
+  // 消息状态管理 - 关键修复：正确响应 initialMessages 变化
+  const [messages, setMessages] = useState<CustomMessage[]>([]);
 
-  const [messages, setMessages] = useState<CustomMessage[]>(
-    convertedInitialMessages
-  );
+  // 当 initialMessages 或 conversationId 变化时，更新消息状态
+  useEffect(() => {
+    console.log("ChatWindow: initialMessages 发生变化", {
+      conversationId,
+      initialMessagesCount: initialMessages.length,
+      initialMessages,
+    });
+
+    const convertedMessages = initialMessages.map((msg) => ({
+      id: msg.id,
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+    }));
+
+    setMessages(convertedMessages);
+    console.log("ChatWindow: 更新消息状态", convertedMessages);
+  }, [initialMessages, conversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -135,11 +144,9 @@ export function ChatWindow({
           sessionId: effectiveSessionId,
         };
 
-        console.log("Sending Qa request to:", `${API_BASE_URL}/api/qa/ask`); // 修正这一行
         console.log("发送QA请求，会话ID:", effectiveSessionId);
         console.log("QaRequestData:", requestData);
 
-        // 修改第97行的fetch请求，使用完整的API_BASE_URL
         const response = await fetch(`${API_BASE_URL}/api/qa/ask`, {
           method: "POST",
           headers: {
@@ -150,14 +157,12 @@ export function ChatWindow({
         });
 
         console.log("响应状态:", response.status, response.statusText);
-        console.log("响应URL:", response.url);
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error("请求失败详情:", {
             status: response.status,
             statusText: response.statusText,
-            url: response.url,
             errorResponse: errorText,
           });
           throw new Error(
@@ -166,7 +171,7 @@ export function ChatWindow({
         }
 
         const answer = await response.text();
-        console.log("成功响应，会话ID:", answer, effectiveSessionId);
+        console.log("成功响应:", answer);
 
         const assistantMessage: CustomMessage = {
           id: (Date.now() + 1).toString(),
@@ -181,15 +186,7 @@ export function ChatWindow({
           onMessageAdded({ role: "assistant", content: answer });
         }
       } catch (error) {
-        console.error("发送消息失败:", {
-          error,
-          requestDetails: {
-            userId: user?.id,
-            question: content,
-            sessionId: conversationId,
-            tokenExists: !!token,
-          },
-        });
+        console.error("发送消息失败:", error);
 
         const errorMessage: CustomMessage = {
           id: (Date.now() + 1).toString(),
@@ -246,7 +243,7 @@ export function ChatWindow({
       <div className="flex-1 flex flex-col min-h-0">
         <ChatHeader />
 
-        {/* 欢迎界面 - 可滚动区域 */}
+        {/* 欢迎界面 */}
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="flex items-center justify-center min-h-full py-8">
             <div className="text-center max-w-md mx-auto px-4">
@@ -257,10 +254,8 @@ export function ChatWindow({
                 AI 聊天助手
               </h1>
               <p className="text-muted-foreground mb-6 text-pretty">
-                我是您的智能助手，我是通过DeepSeek
-                API（模型：deepseek-chat）来回答。
-                可以帮助您解答问题、提供建议或进行有趣的对话。支持 Markdown
-                格式和代码高亮。
+                我是您的智能助手，通过DeepSeek API为您服务。
+                可以帮助您解答问题、提供建议或进行有趣的对话。
               </p>
 
               <div className="space-y-2">
@@ -304,14 +299,20 @@ export function ChatWindow({
 
       {/* 可滚动的消息区域 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            role={message.role}
-            content={message.content}
-            timestamp={new Date()}
-          />
-        ))}
+        {messages.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>暂无消息</p>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              role={message.role}
+              content={message.content}
+              timestamp={new Date()}
+            />
+          ))
+        )}
 
         {isLoading && (
           <div className="flex gap-3 mb-4">
