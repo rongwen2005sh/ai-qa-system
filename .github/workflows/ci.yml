@@ -3,12 +3,12 @@ name: CI/CD for AI QA System
 
 # 工作流的触发条件
 on:
-  # 当有代码推送到 main 分支时触发
+  # 当有代码推送到 aws 分支时触发
   push:
-    branches: [ "main" ]
-  # 当有针对 main 分支的 Pull Request 被创建或更新时触发
+    branches: ["aws"]
+  # 当有针对 aws 分支的 Pull Request 被创建或更新时触发
   pull_request:
-    branches: [ "main" ]
+    branches: ["aws"]
 
 # 定义工作流中的所有任务 (Jobs)
 jobs:
@@ -31,8 +31,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       # 步骤 3: 缓存 Maven 依赖
       # 为了加速构建，缓存下载过的 Maven 依赖包。
