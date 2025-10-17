@@ -3,10 +3,10 @@ name: CI/CD for AI QA System
 
 # 工作流的触发条件
 on:
-  # 当有代码推送到 main 分支时触发
+  # 当有代码推送到 aliyun 分支时触发
   push:
     branches: ["aliyun"]
-  # 当有针对 main 分支的 Pull Request 被创建或更新时触发
+  # 当有针对 aliyun 分支的 Pull Request 被创建或更新时触发
   pull_request:
     branches: ["aliyun"]
 
@@ -227,16 +227,16 @@ jobs:
 
             # 等待前端健康
             echo "等待前端启动..."
-            for i in {1..20}; do
-                if docker-compose ps frontend | grep -q "(healthy)"; then
+            for i in {1..10}; do
+                if docker-compose ps frontend | grep -q "Up"; then
                     echo "✅ 前端已健康"
                     break
                 fi
-                echo "等待前端健康... ($i/20)"
+                echo "等待前端健康... ($i/10)"
                 sleep 60
             done
 
-            echo "=== 最终服务状态确认1 ==="
+            echo "=== 最终服务状态确认 ==="
             docker-compose ps
 
             echo "=== 健康检查汇总 ==="
@@ -246,6 +246,3 @@ jobs:
             curl -f http://localhost:3000 >/dev/null 2>&1 && echo "✅ Frontend 健康" || echo "❌ Frontend 异常"
 
             echo "🎉 部署完成！"
-
-            echo "=== 最终服务状态确认2 ==="
-            docker-compose ps
