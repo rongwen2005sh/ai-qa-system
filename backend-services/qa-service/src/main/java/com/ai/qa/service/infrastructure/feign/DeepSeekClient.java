@@ -16,9 +16,6 @@ import java.util.Map;
  * 负责与DeepSeek API进行通信，发送问题并获取AI回答
  * 封装了HTTP请求的细节，提供简单易用的接口
  * 
- * @author Qiao Zhe
- * @version 1.0
- * @since 2025-09-06
  */
 @Slf4j
 @Component
