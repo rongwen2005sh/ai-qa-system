@@ -227,16 +227,16 @@ jobs:
 
             # 等待前端健康
             echo "等待前端启动..."
-            for i in {1..30}; do
+            for i in {1..20}; do
                 if docker-compose ps frontend | grep -q "(healthy)"; then
                     echo "✅ 前端已健康"
                     break
                 fi
-                echo "等待前端健康... ($i/30)"
-                sleep 30
+                echo "等待前端健康... ($i/20)"
+                sleep 60
             done
 
-            echo "=== 最终服务状态 ==="
+            echo "=== 最终服务状态确认1 ==="
             docker-compose ps
 
             echo "=== 健康检查汇总 ==="
@@ -246,3 +246,6 @@ jobs:
             curl -f http://localhost:3000 >/dev/null 2>&1 && echo "✅ Frontend 健康" || echo "❌ Frontend 异常"
 
             echo "🎉 部署完成！"
+
+            echo "=== 最终服务状态确认2 ==="
+            docker-compose ps

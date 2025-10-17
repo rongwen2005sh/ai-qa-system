@@ -44,7 +44,7 @@ export function Sidebar({
   onSelectConversation,
   onDeleteConversation,
   onRenameConversation,
-  // onLoadConversations,
+  onLoadConversations,
   isLoadingHistory = false,
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -253,7 +253,8 @@ export function Sidebar({
         </ScrollArea>
 
         {/* Footer - 固定高度 */}
-        <div className="p-4 border-t border-sidebar-border flex-shrink-0">
+        {/* 修改这里：移除 border-t，添加 border-b 来与右侧输入框对齐 */}
+        <div className="p-4 border-b border-sidebar-border flex-shrink-0">
           <div className="text-xs text-sidebar-foreground/60 text-center">
             AI 聊天助手 v1.0
           </div>
