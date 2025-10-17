@@ -1,45 +1,52 @@
 server:
-  port: 8080 # 所有后端请求的入口
+  port: ${SERVER_PORT:8080}
+
 logging:
+  file:
+    path: ./logs
+    name: application.log
   level:
-    # 将 Gateway 的核心日志级别设置为 DEBUG
     org.springframework.cloud.gateway: DEBUG
-    # (可选) 将 Reactor Netty 的日志也设为 DEBUG，可以看到更底层的网络交互
     reactor.netty.http.client: DEBUG
-    com.alibaba.nacos.client: DEBUG
+
 spring:
   application:
-    name: api-gateway
-  config:
-    import:
-      # 引入共享配置
-      - "nacos:shared-config.yml"
+    name: api-gateway-rw
   cloud:
-    nacos:
-      server-addr: 54.219.180.170:8848
-      config:
-        # 明确告诉 Nacos Config 默认的文件扩展名是 yml
-        file-extension: yml
-        group: DEFAULT_GROUP
     gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowed-origins: "${ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://54.177.245.226:3000}"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
       discovery:
         locator:
-          enabled: false # 开启基于服务发现的路由功能
-          lower-case-service-id: true # 将服务名转为小写路径，e.g., user-service -> /user-service/**
+          enabled: false
       routes:
         - id: user_service_route
-          uri: lb://user-service # lb:// 表示从Nacos负载均衡地选择一个user-service实例
-#          uri: http://192.168.31.186:8081
+          uri: ${USER_SERVICE_URL:http://user-service:8081} # http://user-service:8081 http://localhost:8081
           predicates:
-            - Path=/api/user/** # 匹配所有/api/user/开头的请求
+            - Path=/api/user/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=0
         - id: qa_service_route
-          uri: lb://qa-service
+          uri: ${QA_SERVICE_URL:http://qa-service:8082} # http://qa-service:8082 http://localhost:8082
           predicates:
             - Path=/api/qa/**
-      default-filters:
-        # 配置默认的限流过滤器
-        - name: RequestRateLimiter
-          args:
-            key-resolver: '#{@ipKeyResolver}'
+          filters:
+            - StripPrefix=0
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@inMemoryRateLimiter}"
+                key-resolver: "#{@ipKeyResolver}"
+                replenish-rate: 10000
+                burst-capacity: 100000
+                requested-tokens: 1
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true

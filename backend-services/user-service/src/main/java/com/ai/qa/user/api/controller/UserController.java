@@ -1,69 +1,208 @@
 package com.ai.qa.user.api.controller;
 
-import com.ai.qa.user.api.dto.ApiResponse;
-import com.ai.qa.user.api.dto.AuthRequest;
-import com.ai.qa.user.api.dto.AuthResponse;
-import com.ai.qa.user.application.dto.UpdateNicknameRequest;
-import com.ai.qa.user.application.service.UserApplicationService;
-import com.ai.qa.user.domain.model.User;
-import lombok.RequiredArgsConstructor;
+import com.ai.qa.user.api.dto.request.LoginRequest;
+import com.ai.qa.user.api.dto.request.RegisterRequest;
+import com.ai.qa.user.api.dto.request.UpdatePasswordRequest;
+import com.ai.qa.user.api.dto.response.LoginResponse;
+import com.ai.qa.user.api.dto.response.RegisterResponse;
+import com.ai.qa.user.api.dto.response.UpdatePasswordResponse;
+import com.ai.qa.user.api.dto.response.UserResponse;
+import com.ai.qa.user.application.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/***
- * 为什么user-service必须也要自己做安全限制？
- * 1。零信任网络 (Zero Trust Network)：在微服务架构中，你必须假设内部网络是不安全的。不能因为一个请求来自API Gateway就完全信任它。万一有其他内部服务被攻破，它可能会伪造请求直接调用user-service，绕过Gateway。如果user-service没有自己的安全防线，它就会被完全暴露。
- * 2。职责分离 (Separation of Concerns)：Gateway的核心职责是路由、限流、熔断和边缘认证。而user-service的核心职责是处理用户相关的业务逻辑，业务逻辑与谁能执行它是密不可分的。授权逻辑是业务逻辑的一部分，必须放在离业务最近的地方。
- * 3。细粒度授权 (Fine-Grained Authorization)：Gateway通常只做粗粒度的授权，比如“USER角色的用户可以访问/api/users/**这个路径”。但它无法知道更精细的业务规则，例如：
- * GET /api/users/{userId}: 用户123是否有权查看用户456的资料？
- * PUT /api/users/{userId}: 只有用户自己或者管理员才能修改用户信息。
- * 这些判断必须由user-service结合自身的业务逻辑和数据来完成。
+/**
+ * 用户控制器
+ * 处理用户相关的HTTP请求，包括登录、注册等接口
+ * 作为RESTful API的入口点，负责请求转发和响应处理
+ *
+ * @author Chen Guoping
+ * @version 1.0
  */
+@Tag(name = "用户管理", description = "用户登录、注册等身份认证相关接口")
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
-
-    private final UserApplicationService userApplicationService;
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
-    public UserController(UserApplicationService userApplicationService) {
-        this.userApplicationService = userApplicationService;
+    private UserService userService;
+
+    /**
+     * 用户登录接口
+     * 接收登录请求，调用服务层进行身份验证，返回登录结果
+     *
+     * @param loginRequest 登录请求参数，包含用户名和密码
+     * @return ResponseEntity<LoginResponse> 包含登录结果的响应实体
+     * @apiNote POST /api/users/login
+     * @example
+     *          {
+     *          "username": "testuser",
+     *          "password": "password123"
+     *          }
+     */
+    @Operation(summary = "用户登录", description = "通过用户名和密码进行身份验证")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "登录成功"),
+            @ApiResponse(responseCode = "400", description = "用户名或密码错误"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Parameter(description = "登录请求参数", required = true)
+            @RequestBody LoginRequest loginRequest
+    ) {
+        log.info("Start login(), username:{}", loginRequest.getUsername());
+
+        // 调用用户服务处理登录逻辑
+        LoginResponse response = userService.login(loginRequest);
+
+        log.info("End login(), username:{}", loginRequest.getUsername());
+
+        // 根据登录成功与否返回相应的HTTP状态码
+        // 成功返回200 OK，失败时业务异常已在服务层抛出，不会执行到此处
+        return ResponseEntity.ok(response);
     }
 
     /**
-     * 更新用户昵称的API端点
+     * 用户注册接口
+     * 接收注册请求，调用服务层创建新用户，返回注册结果
      *
-     * @param userId  从URL路径中获取的用户ID
-     * @param request 包含新昵称的请求体
-     * @return 返回更新后的用户信息和HTTP状态码200 (OK)
+     * @param registerRequest 注册请求参数，包含用户名、昵称、密码等信息
+     * @return ResponseEntity<RegisterResponse> 包含注册结果的响应实体
+     * @apiNote POST /api/users/register
+     * @example
+     *          {
+     *          "username": "newuser",
+     *          "nickname": "新用户",
+     *          "password": "password123",
+     *          "confirmPassword": "password123"
+     *          }
      */
-    @PostMapping("/{userId}/nickname")
-    public ApiResponse<User> updateNickname(
-            @PathVariable Long userId,
-            @RequestBody UpdateNicknameRequest request) {
-        //校验。。。
-
-        // 控制器只负责调用应用层，不处理业务逻辑
-        User updatedUser = userApplicationService.updateNickname(userId, request.getNickname());
-        // 为了安全，最佳实践是返回一个DTO而不是直接返回领域实体，这里为了简化直接返回
-        return ApiResponse.success(updatedUser);
-    }
-    @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) {
-        System.out.println("测试login");
-        return new AuthResponse("token");
-    }
-
+    @Operation(summary = "用户注册", description = "创建新的用户账户")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "注册成功"),
+            @ApiResponse(responseCode = "400", description = "用户名已存在或密码不匹配"),
+            @ApiResponse(responseCode = "409", description = "用户已存在")
+    })
     @PostMapping("/register")
-    public AuthResponse register(@RequestBody AuthRequest request) {
-        System.out.println("测试register");
-        return new AuthResponse("register");
+    public ResponseEntity<RegisterResponse> register(
+            @Parameter(description = "注册请求参数", required = true)
+            @RequestBody RegisterRequest registerRequest
+    ) {
+        log.info("Start register(), username:{}", registerRequest.getUsername());
+
+        // 调用用户服务处理注册逻辑
+        RegisterResponse response = userService.register(registerRequest);
+
+        log.info("Start register(), username:{}", registerRequest.getUsername());
+
+        // 注册成功返回201 Created状态码
+        // 失败时业务异常已在服务层抛出，不会执行到此处
+        return ResponseEntity.status(201).body(response);
     }
 
-    @GetMapping("/{userId}")
-    public String getUserById(@PathVariable("userId") Long userId) {
-        System.out.println("测试userid");
-        return "userid:"+userId;
+    /**
+     * 根据用户ID查询用户信息
+     * 获取指定用户ID的完整用户信息
+     *
+     * @param id 用户ID
+     * @return ResponseEntity<UserResponse> 包含用户信息的响应实体
+     * @apiNote GET /api/user/{id}
+     * @example GET /api/user/1
+     */
+    @Operation(summary = "根据ID查询用户", description = "通过用户ID获取用户详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long id
+    ) {
+        log.info("Start getUserById(), id:{}", id);
+
+        // 调用用户服务查询用户信息
+        UserResponse response = userService.getUserById(id);
+
+        log.info("End getUserById(), id:{}, username:{}", id, response.getUsername());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 根据用户名查询用户信息
+     * 获取指定用户名的完整用户信息
+     *
+     * @param username 用户名
+     * @return ResponseEntity<UserResponse> 包含用户信息的响应实体
+     * @apiNote GET /api/user/username/{username}
+     * @example GET /api/user/username/testuser
+     */
+    @Operation(summary = "根据用户名查询用户", description = "通过用户名获取用户详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
+    @GetMapping("/username/{username}")
+    public ResponseEntity<UserResponse> getUserByUsername(
+            @Parameter(description = "用户名", required = true, example = "testuser")
+            @PathVariable String username
+    ) {
+        log.info("Start getUserByUsername(), username:{}", username);
+
+        // 调用用户服务查询用户信息
+        UserResponse response = userService.findByUsername(username);
+
+        log.info("End getUserByUsername(), username:{}, userId:{}", username, response.getUserId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 修改用户密码接口
+     * 接收密码修改请求，调用服务层进行密码更新，返回操作结果
+     *
+     * @param updatePasswordRequest 修改密码请求参数
+     * @return ResponseEntity<UpdatePasswordResponse> 包含修改结果的响应实体
+     * @apiNote POST /api/users/updatePassword
+     * @example
+     *          {
+     *          "userId": 12345,
+     *          "oldPassword": "oldPassword123",
+     *          "newPassword": "newPassword456",
+     *          "confirmNewPassword": "newPassword456"
+     *          }
+     */
+    @Operation(summary = "修改密码", description = "验证旧密码后更新用户密码")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "密码修改成功"),
+            @ApiResponse(responseCode = "400", description = "旧密码错误或新密码不匹配"),
+            @ApiResponse(responseCode = "401", description = "未授权访问"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
+    @PostMapping("/updatePassword")
+    public ResponseEntity<UpdatePasswordResponse> updatePassword(
+            @Parameter(description = "修改密码请求参数", required = true)
+            @RequestBody UpdatePasswordRequest updatePasswordRequest
+    ) {
+        log.info("Start updatePassword(), username:{}", updatePasswordRequest.getUsername());
+
+        // 调用用户服务处理密码修改逻辑
+        UpdatePasswordResponse response = userService.updatePassword(updatePasswordRequest);
+
+        log.info("End updatePassword(), username:{}", updatePasswordRequest.getUsername());
+
+        // 密码修改成功返回200 OK状态码
+        return ResponseEntity.ok(response);
     }
 }
