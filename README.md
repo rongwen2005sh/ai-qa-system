@@ -1,9 +1,9 @@
-# AI赋能智能问答系统
+# AI 赋能智能问答系统
 
 ## 项目简介
 
 本项目是一个基于 Spring Boot、Spring Cloud 及 Nacos 的微服务架构 AI 问答系统。
-包含用户服务、问答服务以及统一的 API 网关，支持注册、登录、身份认证、JWT令牌、服务发现与路由，以及自动化 API 文档（Swagger/OpenAPI）。
+包含用户服务、问答服务以及统一的 API 网关，支持注册、登录、身份认证、JWT 令牌、服务发现与路由，以及自动化 API 文档（Swagger/OpenAPI）。
 
 ---
 
@@ -17,6 +17,8 @@ ai-qa-system/
 │   ├── qa-service/         # 问答服务（AI问答相关）
 │   ├── user-service/       # 用户服务（注册、登录、认证）
 │   └── pom.xml             # 后端多模块父POM
+├── frontend-nextjs/
+│   ├── frontend/           # 前端
 ├── .gitignore
 ```
 
@@ -24,39 +26,32 @@ ai-qa-system/
 
 ## 微服务模块介绍
 
-### 1. API 网关（api-gateway）
+### 1. API 网关（api-gateway）(端口 8080)
 
 - 使用 Spring Cloud Gateway 进行统一路由和服务发现。
-- 接入 Nacos 作为注册中心，实现负载均衡与动态路由。
 - 主要路由配置见 `application.yml`：
-    - `/api/user/**` → 路由至 user-service
-    - `/api/qa/**`   → 路由至 qa-service
+  - `/api/user/**` → 路由至 user-service
+  - `/api/qa/**` → 路由至 qa-service
 
-### 2. 用户服务（user-service）
+### 2. 用户服务（user-service） (端口 8081)
 
-- 提供用户注册、登录、密码修改、JWT鉴权等功能。
+- 提供用户注册、登录、密码修改、JWT 鉴权等功能。
 - 使用 Spring Security、JPA（MySQL）、自动化 API 文档（Swagger）。
 - 主要接口：
-    - `POST /api/users/login`         — 用户登录（获取JWT令牌）
-    - `POST /api/users/register`      — 用户注册
-    - `POST /api/users/change-password` — 修改密码
+  - `POST /api/users/login` — 用户登录（获取 JWT 令牌）
+  - `POST /api/users/register` — 用户注册
+  - `POST /api/users/change-password` — 修改密码
 
-#### 重要文件：
-- `UserController.java` / `UserControllerImpl.java` — 用户相关REST接口
-- `UserService.java` / `UserServiceImpl.java`      — 业务逻辑
-- `JwtUtil.java`, `JwtAuthenticationFilter.java`   — JWT令牌生成与校验
-- `SecurityConfig.java`                            — 安全配置与拦截规则
-- `GlobalExceptionHandler.java`                    — 全局统一异常处理
-- `User.java`, `UserRepository.java`               — 用户实体与数据库访问
-- `application.yml`                                — 服务配置（Nacos, DB, JWT, Swagger）
-- `sql/init.sql`                                   — MySQL初始化脚本
-
-### 3. 问答服务（qa-service）
+### 3. 问答服务（qa-service） (端口 8082)
 
 - 用于实现 AI 问答相关逻辑（可扩展）。
-- 已注册到 Nacos，网关中配置了路由。
-
----
+- 使用 Spring Security、JPA（MySQL）、自动化 API 文档（Swagger）。
+- 主要接口：
+  - `POST /api/qa/ask` — 处理用户问题
+  - `POST /api/qa/save` — 保存问答历史记录
+  - `GET  /api/qa/history/{id}` — 根据 ID 获取问答记录
+  - `GET  /history/user/{userId}` — 查询用户问答历史
+  - `GET  /history/session/{sessionId}` — 查询会话问答历史
 
 ## 技术栈
 
@@ -78,7 +73,7 @@ ai-qa-system/
 - JDK 17+
 - Maven 3.8+
 - MySQL 8+
-- [Nacos](https://nacos.io/) 注册中心，端口配置见各 `application.yml`
+- 端口配置见各 `application.yml`
 
 ### 数据库初始化
 
@@ -104,19 +99,6 @@ cd user-service        && mvn spring-boot:run
 cd qa-service          && mvn spring-boot:run
 cd api-gateway         && mvn spring-boot:run
 ```
-
-### 服务发现
-
-确保 Nacos 注册中心已启动，地址与端口请参考各 `application.yml` 配置。
-
----
-
-## API文档
-
-- **用户服务 Swagger 文档：**  
-  [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
-
----
 
 ## 认证与安全
 
@@ -148,4 +130,4 @@ cd api-gateway         && mvn spring-boot:run
 
 ---
 
-如需进一步帮助或有建议，欢迎提交Issue！
+如需进一步帮助或有建议，欢迎提交 Issue！

@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { QARequest } from "@/types/qa"; // 根据实际路径导入
 import { v4 as uuidv4 } from "uuid"; // 添加uuid库
 
-//添加 API_BASE_URL 常量
+// 添加 API_BASE_URL 常量
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://101.132.179.6:8080";
+
 // const API_BASE_URL =
 //   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
@@ -216,9 +217,9 @@ export function ChatWindow({
 
   if (!user) {
     return (
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <ChatHeader />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center min-h-0">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bot className="w-8 h-8 text-primary" />
@@ -242,44 +243,46 @@ export function ChatWindow({
 
   if (!conversationId && messages.length === 0) {
     return (
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <ChatHeader />
 
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto px-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bot className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="text-2xl font-semibold mb-2 text-balance">
-              AI 聊天助手
-            </h1>
-            <p className="text-muted-foreground mb-6 text-pretty">
-              我是您的智能助手，我是通过DeepSeek
-              API（模型：deepseek-chat）来回答。
-              可以帮助您解答问题、提供建议或进行有趣的对话。支持 Markdown
-              格式和代码高亮。
-            </p>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground mb-3">
-                试试这些问题：
+        {/* 欢迎界面 - 可滚动区域 */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="flex items-center justify-center min-h-full py-8">
+            <div className="text-center max-w-md mx-auto px-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bot className="w-8 h-8 text-primary" />
+              </div>
+              <h1 className="text-2xl font-semibold mb-2 text-balance">
+                AI 聊天助手
+              </h1>
+              <p className="text-muted-foreground mb-6 text-pretty">
+                我是您的智能助手，我是通过DeepSeek
+                API（模型：deepseek-chat）来回答。
+                可以帮助您解答问题、提供建议或进行有趣的对话。支持 Markdown
+                格式和代码高亮。
               </p>
-              <div className="grid gap-2">
-                {[
-                  // "解释一下人工智能的基本概念",
-                  "帮我写一个简单的 Python 函数",
-                  "推荐一些学习编程的资源",
-                  "用 Markdown 格式介绍一下 React",
-                ].map((prompt, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSendMessage(prompt)}
-                    className="text-left p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
-                  >
-                    <Sparkles className="w-4 h-4 inline mr-2 text-primary" />
-                    {prompt}
-                  </button>
-                ))}
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground mb-3">
+                  试试这些问题：
+                </p>
+                <div className="grid gap-2">
+                  {[
+                    "帮我写一个简单的 Python 函数",
+                    "推荐一些学习编程的资源",
+                    "用 Markdown 格式介绍一下 React",
+                  ].map((prompt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSendMessage(prompt)}
+                      className="text-left p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
+                    >
+                      <Sparkles className="w-4 h-4 inline mr-2 text-primary" />
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -295,10 +298,12 @@ export function ChatWindow({
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
+      {/* 固定头部 */}
       <ChatHeader title={conversationTitle} />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* 可滚动的消息区域 */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -326,6 +331,7 @@ export function ChatWindow({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* 固定输入框 */}
       <ChatInput onSendMessage={handleSendMessage} disabled={isLoading} />
     </div>
   );
